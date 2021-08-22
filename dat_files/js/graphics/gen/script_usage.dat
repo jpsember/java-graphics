@@ -1,0 +1,5 @@
+enum {
+  nominal,
+  omit,
+  retain,
+}
