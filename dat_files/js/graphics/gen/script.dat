@@ -1,0 +1,13 @@
+// A collection of objects to be displayed visually, e.g. for annotating images
+
+enum ScriptUsage;
+
+extern js.graphics.ScriptElement;
+
+fields {
+  ScriptUsage usage;
+  *ScriptElement items;
+  ?ScriptMetadata metadata;
+  ?bool omit;
+  ?bool retain;
+}

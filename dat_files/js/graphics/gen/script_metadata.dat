@@ -1,0 +1,10 @@
+fields {
+
+  // Path to original source image
+  //
+  ?File source_image_file;
+
+  // Transformation applied to source image/script to produce current image/script
+  //
+  ?Matrix source_transform;
+}

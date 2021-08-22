@@ -1,0 +1,8 @@
+fields {
+  int golomb = 180;
+  float padding  = 0.25;
+
+  // This is an output argument
+  //
+  float ratio;
+}

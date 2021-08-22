@@ -1,0 +1,18 @@
+fields {
+
+  // Planar rotation, in degrees
+  //
+  ?int rotation;
+
+  // Detection or recognition confidence, a percentage 0..100 inclusive
+  //
+  ?int confidence;
+
+  // Category or class of object
+  //
+  ?int category;
+
+  // Anchor box index (for YOLO)
+  //
+  ?int anchor;
+}

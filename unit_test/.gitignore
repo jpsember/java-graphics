@@ -1,0 +1,3 @@
+generated
+# We now generate these, if necessary, from other image types
+jimage_util_test_data/*.jmg
