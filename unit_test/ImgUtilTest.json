@@ -1,2 +1,5 @@
-{
+{        "imageAsType" : 3171,
+           "mono16bit" : 1218,
+  "printImageToBuffer" : 4925,
+             "readPNG" : 6855
 }
