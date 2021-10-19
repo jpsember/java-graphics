@@ -55,7 +55,7 @@ public class PointElement extends AbstractScriptElement {
 
   @Override
   public JSMap toJson() {
-    return toJsonAux().put("loc", mLocation.toJson());
+    return toJsonAux(null).put("loc", mLocation.toJson());
   }
 
   @Override

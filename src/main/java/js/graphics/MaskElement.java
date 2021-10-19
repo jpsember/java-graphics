@@ -40,7 +40,7 @@ public class MaskElement extends RectElement {
 
   @Override
   public JSMap toJson() {
-    return toJsonAux().put("bounds", mBounds.toJson());
+    return toJsonAux(null).put("bounds", mBounds.toJson());
   }
 
   @Override

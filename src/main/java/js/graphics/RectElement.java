@@ -65,7 +65,7 @@ public class RectElement extends AbstractScriptElement {
   public JSMap toJson() {
     loadTools();
     // Rects are the default elements, so omit the tag
-    return toJsonAux().remove(ScriptUtil.TAG_KEY) //
+    return toJsonAux(null).remove(ScriptUtil.TAG_KEY) //
         .put("bounds", mBounds.toJson());
   }
 

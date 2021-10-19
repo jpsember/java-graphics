@@ -87,19 +87,9 @@ public interface ScriptElement extends AbstractData {
    * possible, before the subclass gets it. This includes the TAG and PROPERTIES
    * fields
    */
-  default JSMap toJsonAux() {
-    todo("can we always require a JSMap argument to eliminate this method in favor of the following one?");
-    return toJsonAux(map());
-    //    JSMap m = map();
-    //    m.put(ScriptUtil.TAG_KEY, tag());
-    //    ElementProperties properties = properties();
-    //    // Don't include a properties field if it's the default instance
-    //    if (!properties.equals(ElementProperties.DEFAULT_INSTANCE))
-    //      m.put(ScriptUtil.TAG_PROPERTIES, properties);
-    //    return m;
-  }
-
   default JSMap toJsonAux(JSMap m) {
+    if (m == null)
+      m = map();
     m.put(ScriptUtil.TAG_KEY, tag());
     ElementProperties properties = properties();
     // Don't include a properties field if it's the default instance
