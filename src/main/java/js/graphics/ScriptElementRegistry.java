@@ -34,10 +34,22 @@ import js.json.JSMap;
 public final class ScriptElementRegistry {
 
   public static ScriptElementRegistry sharedInstance() {
+    // I was doing this initialization in a static initializer, but that was causing
+    // strange problems.
+    if (sSharedInstance == null) {
+      ScriptElementRegistry s = new ScriptElementRegistry();
+      s.register(PointElement.DEFAULT_INSTANCE);
+      s.register(RectElement.DEFAULT_INSTANCE);
+      s.register(MaskElement.DEFAULT_INSTANCE);
+      s.register(PolygonElement.DEFAULT_INSTANCE);
+      s.register(TextElement.DEFAULT_INSTANCE);
+      sSharedInstance = s;
+    }
     return sSharedInstance;
   }
 
   public void register(ScriptElement instance) {
+    checkNotNull(instance, "ScriptElement instance was null");
     mMap.put(instance.tag(), instance);
   }
 
@@ -51,21 +63,15 @@ public final class ScriptElementRegistry {
     return elem;
   }
 
-  private static final ScriptElementRegistry sSharedInstance;
-
-  static {
-    ScriptElementRegistry s = new ScriptElementRegistry();
-    s.register(PointElement.DEFAULT_INSTANCE);
-    s.register(RectElement.DEFAULT_INSTANCE);
-    s.register(MaskElement.DEFAULT_INSTANCE);
-    s.register(PolygonElement.DEFAULT_INSTANCE);
-    s.register(TextElement.DEFAULT_INSTANCE);
-    sSharedInstance = s;
-  }
+  private static ScriptElementRegistry sSharedInstance;
 
   private Map<String, ScriptElement> mMap = concurrentHashMap();
 
-  private static final String DEFAULT_TAG = RectElement.DEFAULT_INSTANCE.tag();
+  // 
+  // I was using this, but some idiosyncratic class loading / initialization behaviour was
+  // producing a null value:
+  //
+  // private static final String DEFAULT_TAG = RectElement.DEFAULT_INSTANCE.tag();
 
   /**
    * An object that implements ScriptElement to serve as a parser that produces
@@ -80,7 +86,7 @@ public final class ScriptElementRegistry {
 
     public ScriptElement parse(Object object) {
       JSMap m = (JSMap) object;
-      String tag = m.opt(ScriptUtil.TAG_KEY, DEFAULT_TAG);
+      String tag = m.opt(ScriptUtil.TAG_KEY, RectElement.DEFAULT_INSTANCE.tag());
       ScriptElement parser = sharedInstance().elementForTag(tag);
       if (parser == null)
         return null;
