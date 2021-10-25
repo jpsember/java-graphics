@@ -40,6 +40,8 @@ public final class ScriptElementRegistry {
       ScriptElementRegistry s = new ScriptElementRegistry();
       s.register(PointElement.DEFAULT_INSTANCE);
       s.register(RectElement.DEFAULT_INSTANCE);
+      // Older scripts have a different tag for RectElements
+      s.register("object", RectElement.DEFAULT_INSTANCE);
       s.register(MaskElement.DEFAULT_INSTANCE);
       s.register(PolygonElement.DEFAULT_INSTANCE);
       s.register(TextElement.DEFAULT_INSTANCE);
@@ -49,8 +51,11 @@ public final class ScriptElementRegistry {
   }
 
   public void register(ScriptElement instance) {
-    checkNotNull(instance, "ScriptElement instance was null");
-    mMap.put(instance.tag(), instance);
+    register(instance.tag(), instance);
+  }
+
+  public void register(String tag, ScriptElement instance) {
+    mMap.put(tag, instance);
   }
 
   public ScriptElement elementForTag(String tag) {
