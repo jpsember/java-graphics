@@ -433,8 +433,14 @@ public final class ImgUtil {
     int requiredLength = pixels.length * numChannels;
     if (destination == null) {
       destination = new float[requiredLength];
-    } else if (destination.length != requiredLength)
+    } else if (destination.length != requiredLength) {
+      pr("sourceImage:", INDENT, ImgUtil.toJson(sourceImage));
+      pr("numChannels:", numChannels);
+      pr("destinationOrNull:", destinationOrNull);
+      pr("pixels.length:", pixels.length);
+      pr("requiredLength:", requiredLength);
       throw die("unexpected length", destination.length, "!=", requiredLength);
+    }
 
     switch (sourceImage.getType()) {
     case BufferedImage.TYPE_INT_RGB: {
