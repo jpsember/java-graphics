@@ -75,7 +75,6 @@ public final class ImgUtil {
     // If file is a custom format, treat appropriately
     String ext = Files.getExtension(src);
     if (ext.equals(RAX_EXT)) {
-      todo("have option to perform normalization, sharpening, etc");
       return readRax(Files.openInputStream(src));
     }
     return read(Files.openInputStream(src));
@@ -104,11 +103,24 @@ public final class ImgUtil {
   private static final int RAX_COMPRESS_FLAG = 0xfd;
   private static final int RAX_VERSION_1 = 1;
 
+  /**
+   * Read .rax from input stream
+   * 
+   * @param dimensions
+   *          this must be an array to hold a single IPoint; the dimensions are
+   *          returned here
+   * @return pixels
+   */
+  public static short[] readRax(InputStream inputStream, IPoint[] dimensions) {
+    byte[] content = Files.toByteArray(inputStream);
+    short[] pixels = decompressRAX(content, dimensions, null);
+    return pixels;
+  }
+
   public static BufferedImage readRax(InputStream inputStream) {
     try {
-      byte[] content = Files.toByteArray(inputStream);
       IPoint[] receivedSize = new IPoint[1];
-      short[] pixels = decompressRAX(content, receivedSize, null);
+      short[] pixels = readRax(inputStream, receivedSize);
       IPoint size = receivedSize[0];
       return toBufferedImage(pixels, size);
     } catch (Throwable t) {
@@ -118,7 +130,7 @@ public final class ImgUtil {
     }
   }
 
-  private static BufferedImage toBufferedImage(short[] pixels, IPoint size) {
+  public static BufferedImage toBufferedImage(short[] pixels, IPoint size) {
     BufferedImage bufferedImage = buildGrayscaleImage(size);
     short[] destPixels = grayPixels(bufferedImage);
     System.arraycopy(pixels, 0, destPixels, 0, destPixels.length);
