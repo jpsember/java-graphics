@@ -78,9 +78,7 @@ public interface ScriptElement extends AbstractData {
   /**
    * Construct a copy of this element, with new properties
    */
-  default ScriptElement withProperties(ElementProperties properties) {
-    throw notSupported();
-  }
+  ScriptElement withProperties(ElementProperties properties);
 
   /**
    * Start serializing this element to a JSMap, filling in as many fields as

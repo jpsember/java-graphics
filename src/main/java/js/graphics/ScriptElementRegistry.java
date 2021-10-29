@@ -29,6 +29,7 @@ import static js.base.Tools.*;
 import java.util.Map;
 
 import js.geometry.IRect;
+import js.graphics.gen.ElementProperties;
 import js.json.JSMap;
 
 public final class ScriptElementRegistry {
@@ -86,6 +87,11 @@ public final class ScriptElementRegistry {
 
     @Override
     public IRect bounds() {
+      throw notSupported();
+    }
+
+    @Override
+    public ScriptElement withProperties(ElementProperties properties) {
       throw notSupported();
     }
 

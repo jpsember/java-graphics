@@ -59,9 +59,13 @@ public final class TextElement extends AbstractScriptElement {
     return m;
   }
 
+  @Override
+  public TextElement withProperties(ElementProperties properties) {
+    return new TextElement(properties, mText, mBounds);
+  }
+
   public TextElement(ElementProperties properties, String text, IRect bounds) {
     super(properties);
-
     mText = nullToEmpty(text);
     mBounds = checkNotNull(bounds);
   }

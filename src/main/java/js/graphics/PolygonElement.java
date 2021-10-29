@@ -63,6 +63,11 @@ public final class PolygonElement extends AbstractScriptElement {
   }
 
   @Override
+  public PolygonElement withProperties(ElementProperties properties) {
+    return new PolygonElement(properties, mPolygon);
+  }
+
+  @Override
   public PolygonElement parse(Object object) {
     JSMap m = (JSMap) object;
 
