@@ -62,8 +62,9 @@ public final class ImgUtil {
   public static final String JPEG_EXT = "jpg";
   public static final String PNG_EXT = "png";
   public static final String JMG_EXT = "jmg";
+  public static final String RAX_EXT = "rax";
 
-  public static final List<String> IMAGE_EXTENSIONS = arrayList(JPEG_EXT, PNG_EXT, "jpeg");
+  public static final List<String> IMAGE_EXTENSIONS = arrayList(JPEG_EXT, PNG_EXT, "jpeg", RAX_EXT);
   public static final int PREFERRED_IMAGE_TYPE_COLOR = BufferedImage.TYPE_INT_RGB;
 
   // ------------------------------------------------------------------
@@ -71,6 +72,12 @@ public final class ImgUtil {
   // ------------------------------------------------------------------
 
   public static BufferedImage read(File src) {
+    // If file is a custom format, treat appropriately
+    String ext = Files.getExtension(src);
+    if (ext.equals(RAX_EXT)) {
+      todo("have option to perform normalization, sharpening, etc");
+      return readRax(Files.openInputStream(src));
+    }
     return read(Files.openInputStream(src));
   }
 
@@ -87,6 +94,148 @@ public final class ImgUtil {
     } catch (IOException e) {
       throw Files.asFileException(e);
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Support for .rax files
+  // ------------------------------------------------------------------
+
+  private static final int RAX_COMPRESS_HEADER_LENGTH = 6;
+  private static final int RAX_COMPRESS_FLAG = 0xfd;
+  private static final int RAX_VERSION_1 = 1;
+
+  public static BufferedImage readRax(InputStream inputStream) {
+    try {
+      byte[] content = Files.toByteArray(inputStream);
+      IPoint[] receivedSize = new IPoint[1];
+      short[] pixels = decompressRAX(content, receivedSize, null);
+      IPoint size = receivedSize[0];
+      return toBufferedImage(pixels, size);
+    } catch (Throwable t) {
+      throw Files.asFileException(t);
+    } finally {
+      Files.closePeacefully(inputStream);
+    }
+  }
+
+  private static BufferedImage toBufferedImage(short[] pixels, IPoint size) {
+    BufferedImage bufferedImage = buildGrayscaleImage(size);
+    short[] destPixels = grayPixels(bufferedImage);
+    System.arraycopy(pixels, 0, destPixels, 0, destPixels.length);
+    return bufferedImage;
+  }
+
+  /**
+   * Decompress RAX pixels
+   */
+  public static short[] decompressRAX(byte[] byteBuffer, IPoint[] outputSizeOrNull,
+      short[] outputPixelsOrNull) {
+    IPoint imageSize = looksLikeCompressedRawImage(byteBuffer);
+    if (imageSize == null)
+      throw new IllegalArgumentException("does not look like a compressed RawImage");
+    byte version = byteBuffer[1];
+    checkArgument(version == RAX_VERSION_1, "unexpected version: " + version);
+
+    ByteArrayInputStream input = new ByteArrayInputStream(byteBuffer, RAX_COMPRESS_HEADER_LENGTH,
+        byteBuffer.length - RAX_COMPRESS_HEADER_LENGTH);
+
+    if (outputSizeOrNull != null)
+      outputSizeOrNull[0] = imageSize;
+    int imageWidth = imageSize.x;
+    int imageHeight = imageSize.y;
+
+    int expectedLength = imageWidth * imageHeight;
+    short[] outputPixels = DataUtil.shortArray(expectedLength, outputPixelsOrNull);
+
+    int rowOffset = 0;
+    for (int rowNumber = 0; rowNumber < imageHeight; rowNumber++, rowOffset += imageWidth) {
+      int rowOffsetM2 = rowOffset - 2 * imageWidth;
+      int rowOffsetM1 = rowOffset - imageWidth;
+      int prevH1, prevH2;
+
+      if (rowNumber == 0) {
+        prevH1 = 20000;
+        prevH2 = 20000;
+        for (int x = 0; x < imageWidth; x++) {
+          int prediction = v1Scale(prevH1 - prevH2) + prevH1;
+          int pixel = extractIntegerFromStream(input, prediction);
+          outputPixels[rowOffset + x] = (short) pixel;
+          prevH2 = prevH1;
+          prevH1 = pixel;
+        }
+      } else if (rowNumber == 1) {
+        prevH1 = outputPixels[0];
+        prevH2 = prevH1;
+        for (int x = 0; x < imageWidth; x++) {
+          int prevV1 = outputPixels[rowOffsetM1 + x];
+          int prediction = (v1Scale(prevH1 - prevH2) + (prevH1 + prevV1)) / 2;
+          int pixel = extractIntegerFromStream(input, prediction);
+          outputPixels[rowOffset + x] = (short) pixel;
+          prevH2 = prevH1;
+          prevH1 = pixel;
+        }
+      } else {
+        prevH1 = outputPixels[rowOffsetM1];
+        prevH2 = outputPixels[rowOffsetM2];
+        for (int x = 0; x < imageWidth; x++) {
+          int prevV1 = outputPixels[rowOffsetM1 + x];
+          int prevV2 = outputPixels[rowOffsetM2 + x];
+          int prediction = (v1Scale((prevH1 - prevH2) + (prevV1 - prevV2)) + (prevH1 + prevV1)) / 2;
+          int pixel = extractIntegerFromStream(input, prediction);
+          outputPixels[rowOffset + x] = (short) pixel;
+          prevH2 = prevH1;
+          prevH1 = pixel;
+        }
+      }
+    }
+    return outputPixels;
+  }
+
+  private static int extractIntegerFromStream(ByteArrayInputStream stream, int prediction) {
+    final byte JUMP_SIGNAL = -128;
+    int result;
+    byte value = (byte) stream.read();
+    if (value == JUMP_SIGNAL) {
+      int lb = stream.read();
+      int hb = stream.read();
+      int value2 = lb + (hb << 8);
+      result = (value2 & 0xffff);
+    } else {
+      result = prediction + value;
+    }
+    return result;
+  }
+
+  private static int v1Scale(int value) {
+    // Get same effect as multiplying by 0.280f, but without using floating point
+    return (value * 7) / 25;
+  }
+
+  /**
+   * Determine if an array of bytes looks like a compressed RawImage. If so,
+   * returns the presumed dimensions of the image; otherwise, null
+   */
+  public static IPoint looksLikeCompressedRawImage(byte[] byteBuffer) {
+    IPoint result = null;
+    do {
+      if (byteBuffer.length < RAX_COMPRESS_HEADER_LENGTH)
+        break;
+      if (byteBuffer[0] != (byte) RAX_COMPRESS_FLAG)
+        break;
+      int imageWidth = toInt(byteBuffer[2]) + (toInt(byteBuffer[3]) << 8);
+      int imageHeight = toInt(byteBuffer[4]) + (toInt(byteBuffer[5]) << 8);
+      if (imageWidth < 1 || imageWidth > 2048 || imageHeight < 1 || imageHeight > 2048)
+        break;
+      result = new IPoint(imageWidth, imageHeight);
+    } while (false);
+    return result;
+  }
+
+  /**
+   * Interpret a byte as an unsigned 8-bit int
+   */
+  private static int toInt(byte b) {
+    return ((int) (b & 0xff));
   }
 
   // ------------------------------------------------------------------
