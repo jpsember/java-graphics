@@ -35,7 +35,7 @@ import js.json.JSMap;
  * A ScriptElement representing a polygon. A thin wrapper around a Polygon
  * object
  */
-public final class PolygonElement extends AbstractScriptElement {
+public class PolygonElement extends AbstractScriptElement {
 
   public static final PolygonElement DEFAULT_INSTANCE = new PolygonElement(null, Polygon.DEFAULT_INSTANCE);
   public static final String TAG = "polygon";
