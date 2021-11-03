@@ -395,8 +395,20 @@ public final class ImgUtil {
   /**
    * Build BufferedImage.TYPE_USHORT_GRAY (16-bit monochrome pixels)
    */
+  public static BufferedImage build16BitGrayscaleImage(IPoint size) {
+    return build(size, BufferedImage.TYPE_USHORT_GRAY);
+  }
+
+  @Deprecated // Use build16BitGrayscaleImage
   public static BufferedImage buildGrayscaleImage(IPoint size) {
     return build(size, BufferedImage.TYPE_USHORT_GRAY);
+  }
+
+  /**
+   * Build BufferedImage.TYPE_BYTE_GRAY image
+   */
+  public static BufferedImage build8BitGrayscaleImage(IPoint size) {
+    return build(size, BufferedImage.TYPE_BYTE_GRAY);
   }
 
   /**
@@ -458,6 +470,12 @@ public final class ImgUtil {
   // ------------------------------------------------------------------
   // Reading pixels from images
   // ------------------------------------------------------------------
+
+  public static byte[] gray8Pixels(BufferedImage gray8Image) {
+    BufferedImage image = gray8Image;
+    assertImageType(image, BufferedImage.TYPE_BYTE_GRAY);
+    return ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+  }
 
   public static int[] rgbPixels(BufferedImage bufferedImage_INT_RGB) {
     BufferedImage image = bufferedImage_INT_RGB;
@@ -740,6 +758,23 @@ public final class ImgUtil {
       throw new IllegalArgumentException(
           "pixel array has unexpected length; is source image a cropped view of another?");
     return array;
+  }
+
+  /**
+   * Convert an 8-bit grayscale image to an 8-bit rgb one, with (fairly)
+   * distinct colors for each shade of gray
+   */
+  public static BufferedImage grayscaleToRGB(BufferedImage gray8Image) {
+    BufferedImage rgb8Image = ImgUtil.buildRGBImage(ImgUtil.size(gray8Image));
+    int[] rgbPixels = ImgUtil.rgbPixels(rgb8Image);
+    byte[] grayPixels = gray8Pixels(gray8Image);
+    int i = -1;
+    List<Color> colors = Plotter.rgbColorList();
+    for (byte grayLevel : grayPixels) {
+      i++;
+      rgbPixels[i] = getMod(colors, grayLevel).getRGB();
+    }
+    return rgb8Image;
   }
 
   /**
