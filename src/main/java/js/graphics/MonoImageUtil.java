@@ -12,6 +12,7 @@ import js.base.Pair;
 import js.data.DataUtil;
 import js.geometry.IPoint;
 import js.geometry.IRect;
+import js.geometry.MyMath;
 import js.graphics.ImgUtil;
 import js.graphics.gen.ImageStats;
 import js.graphics.gen.MonoImage;
@@ -19,6 +20,9 @@ import js.json.JSList;
 import js.json.JSMap;
 
 public final class MonoImageUtil {
+
+  // This is now the max pixel value for signed 16-bit pixels
+  public static final int MAX_PIXEL_VALUE = 0x8000;
 
   /**
    * Construct MonoImage with pixels initialized to zero
@@ -397,6 +401,53 @@ public final class MonoImageUtil {
       destPixels[i] = gray | (gray << 8) | (gray << 16);
     }
     return bufferedImage;
+  }
+
+  /**
+   * Apply linear normalization to image, by translating pixels then scaling
+   */
+  public static MonoImage normalize(MonoImage image, float translate, float scale) {
+    return normalizeToDepth(image, translate, scale, 15);
+  }
+
+  /**
+   * Apply linear normalization to image, translating pixels then scaling, and
+   * clamping to a particular depth
+   */
+  public static MonoImage normalizeToDepth(MonoImage image, float translate, float scale, int depth) {
+    short[] inPix = image.pixels();
+    short maxPixelValue = (short) ((1 << depth) - 1);
+    short[] outPix = new short[inPix.length];
+    int j = 0;
+    for (short inPixel : inPix) {
+      int p = (int) ((inPixel + translate) * scale);
+      p = MyMath.clamp(p, 0, maxPixelValue);
+      outPix[j++] = (short) p;
+    }
+    return image.build().toBuilder().pixels(outPix).build();
+  }
+
+  /**
+   * Construct version of raw image, normalized using ImageMagick algorithm,
+   * which (I think) is a linear mapping of the trimmed histogram to 0..65535,
+   * where the darkest 2% and lightest %1 of pixels are trimmed.
+   * <p>
+   * See http://www.imagemagick.org/Usage/color_mods/#normalize
+   */
+  public static MonoImage normalizedImageMagick(MonoImage monoImage, ImageStats statsOrNull) {
+    ImageStats stats = statsOrNull;
+    if (stats == null)
+      stats = MonoImageUtil.generateStats(monoImage);
+    if (stats.cdf().length == 0)
+      throw badArg("CDF is empty");
+
+    int lowCutoffValue = stats.cdf()[1];
+    int highCutoffValue = stats.cdf()[98];
+
+    float scale = ((float) MAX_PIXEL_VALUE) / (highCutoffValue - lowCutoffValue);
+    float translate = -lowCutoffValue;
+
+    return MonoImageUtil.normalize(monoImage, translate, scale);
   }
 
 }
