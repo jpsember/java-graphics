@@ -49,6 +49,7 @@ import js.data.DataUtil;
 import js.geometry.IPoint;
 import js.geometry.IRect;
 import js.geometry.MyMath;
+import js.graphics.gen.MonoImage;
 import js.json.JSList;
 import js.json.JSMap;
 import js.json.JSObject;
@@ -75,7 +76,8 @@ public final class ImgUtil {
     // If file is a custom format, treat appropriately
     String ext = Files.getExtension(src);
     if (ext.equals(RAX_EXT)) {
-      return readRax(Files.openInputStream(src));
+      MonoImage monoImage = readRax(Files.openInputStream(src));
+      return MonoImageUtil.to16BitGrayscaleBufferedImage(monoImage);
     }
     return read(Files.openInputStream(src));
   }
@@ -111,54 +113,32 @@ public final class ImgUtil {
    *          returned here
    * @return pixels
    */
-  public static short[] readRax(InputStream inputStream, IPoint[] dimensions) {
+  public static MonoImage readRax(InputStream inputStream) {
     byte[] content = Files.toByteArray(inputStream);
-    short[] pixels = decompressRAX(content, dimensions, null);
-    return pixels;
-  }
-
-  public static BufferedImage readRax(InputStream inputStream) {
-    try {
-      IPoint[] receivedSize = new IPoint[1];
-      short[] pixels = readRax(inputStream, receivedSize);
-      IPoint size = receivedSize[0];
-      return toBufferedImage(pixels, size);
-    } catch (Throwable t) {
-      throw Files.asFileException(t);
-    } finally {
-      Files.closePeacefully(inputStream);
-    }
-  }
-
-  public static BufferedImage toBufferedImage(short[] pixels, IPoint size) {
-    BufferedImage bufferedImage = buildGrayscaleImage(size);
-    short[] destPixels = grayPixels(bufferedImage);
-    System.arraycopy(pixels, 0, destPixels, 0, destPixels.length);
-    return bufferedImage;
+    return decompressRAX(content, null);
   }
 
   /**
    * Decompress RAX pixels
    */
-  public static short[] decompressRAX(byte[] byteBuffer, IPoint[] outputSizeOrNull,
-      short[] outputPixelsOrNull) {
+  public static MonoImage decompressRAX(byte[] byteBuffer, short[] outputPixelsOrNull) {
+    MonoImage.Builder monoImage = MonoImage.newBuilder();
     IPoint imageSize = looksLikeCompressedRawImage(byteBuffer);
     if (imageSize == null)
       throw new IllegalArgumentException("does not look like a compressed RawImage");
+    monoImage.size(imageSize);
     byte version = byteBuffer[1];
     checkArgument(version == RAX_VERSION_1, "unexpected version: " + version);
 
     ByteArrayInputStream input = new ByteArrayInputStream(byteBuffer, RAX_COMPRESS_HEADER_LENGTH,
         byteBuffer.length - RAX_COMPRESS_HEADER_LENGTH);
 
-    if (outputSizeOrNull != null)
-      outputSizeOrNull[0] = imageSize;
     int imageWidth = imageSize.x;
     int imageHeight = imageSize.y;
 
     int expectedLength = imageWidth * imageHeight;
     short[] outputPixels = DataUtil.shortArray(expectedLength, outputPixelsOrNull);
-
+    monoImage.pixels(outputPixels);
     int rowOffset = 0;
     for (int rowNumber = 0; rowNumber < imageHeight; rowNumber++, rowOffset += imageWidth) {
       int rowOffsetM2 = rowOffset - 2 * imageWidth;
@@ -200,7 +180,7 @@ public final class ImgUtil {
         }
       }
     }
-    return outputPixels;
+    return monoImage.build();
   }
 
   private static int extractIntegerFromStream(ByteArrayInputStream stream, int prediction) {

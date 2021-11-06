@@ -1,0 +1,31 @@
+fields {
+  // Nonempty if stats generation is incomplete
+  string problem;
+
+  int min;
+  int max;
+  int mean;
+  int median;
+  int range;
+  int clipped_range;
+
+  // Number of nonzero pixels
+  int count;
+
+  // Location of min-valued pixel
+  IPoint min_loc;
+  // Location of max-valued pixel
+  IPoint max_loc;
+
+  // Frequency of each pixel from min...max
+  *int histogram;
+
+  // If nonempty, a plot of the histogram
+  map string string histogram_plot;
+
+  // Cumulative distribution function: value of lightest pixel in darkest (n+1) percent of pixels
+  *short cdf;
+
+  // If nonempty, a plot of the cdf
+  map string string cdf_plot;
+}

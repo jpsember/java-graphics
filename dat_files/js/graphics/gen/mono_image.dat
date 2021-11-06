@@ -1,0 +1,11 @@
+fields {
+
+  // Offset within original image of first pixel
+  IPoint offset;
+
+  // Dimensions of image
+  IPoint size;
+
+  *short pixels;
+
+}
