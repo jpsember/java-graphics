@@ -26,7 +26,6 @@ package js.graphics;
 
 import static js.base.Tools.*;
 
-import js.geometry.Matrix;
 import js.graphics.gen.ElementProperties;
 import js.json.JSMap;
 
@@ -43,11 +42,6 @@ public abstract class AbstractScriptElement implements ScriptElement {
   public final ElementProperties properties() {
     return mProperties;
   }
-
-  /**
-   * Return transformed version of element
-   */
-  public abstract ScriptElement applyTransform(Matrix transform);
 
   public static ElementProperties parsePropertiesFromElement(JSMap map) {
     JSMap m = map.optJSMap(ScriptUtil.TAG_PROPERTIES);

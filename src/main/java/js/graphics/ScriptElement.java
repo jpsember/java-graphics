@@ -29,6 +29,7 @@ import static js.base.Tools.*;
 import js.data.AbstractData;
 import js.geometry.IPoint;
 import js.geometry.IRect;
+import js.geometry.Matrix;
 import js.graphics.gen.ElementProperties;
 import js.json.JSMap;
 
@@ -79,6 +80,12 @@ public interface ScriptElement extends AbstractData {
    * Construct a copy of this element, with new properties
    */
   ScriptElement withProperties(ElementProperties properties);
+
+
+  /**
+   * Return transformed version of element
+   */
+  public abstract ScriptElement applyTransform(Matrix transform);
 
   /**
    * Start serializing this element to a JSMap, filling in as many fields as

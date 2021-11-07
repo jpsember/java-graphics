@@ -159,6 +159,14 @@ public final class ScriptUtil {
     createProject(directory, map().put("require_images", false));
   }
 
+  public static List<ScriptElement> transform(List<ScriptElement> elements, Matrix transform) {
+    List<ScriptElement> result = arrayList();
+    for (ScriptElement elem : elements)
+      result.add(elem.applyTransform(transform));
+    return result;
+  }
+
+  @Deprecated // Use transform(ScriptElement list) instead
   public static Script.Builder transform(Script sourceScriptData, Matrix transform) {
     Script.Builder b = DataUtil.defensiveBuilder(sourceScriptData);
     b.items().clear();

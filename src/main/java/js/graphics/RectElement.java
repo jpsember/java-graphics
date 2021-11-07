@@ -31,6 +31,7 @@ import java.util.List;
 import js.geometry.IPoint;
 import js.geometry.IRect;
 import js.geometry.Matrix;
+import js.geometry.Polygon;
 import js.graphics.gen.ElementProperties;
 import js.json.JSList;
 import js.json.JSMap;
@@ -111,7 +112,7 @@ public class RectElement extends AbstractScriptElement {
 
   @Override
   public RectElement applyTransform(Matrix matrix) {
-    return withBounds(bounds().applyTransform(matrix));
+    return withBounds(applyTruncatedHeuristicTransform(bounds(), matrix));
   }
 
   protected final IRect mBounds;
@@ -144,8 +145,19 @@ public class RectElement extends AbstractScriptElement {
     return pts;
   }
 
+  @Deprecated
   public static List<IPoint> truncatedRect(IRect r) {
     return truncatedRect(r, 0.2f);
+  }
+
+  /**
+   * Apply a transformation to IRect, using truncated rect convex hull heuristic
+   */
+  public static IRect applyTruncatedHeuristicTransform(IRect rect, Matrix tfm) {
+    List<IPoint> hullPoints = truncatedRect(rect, 0.2f);
+    Polygon trunc = Polygon.DEFAULT_INSTANCE.withVertices(hullPoints);
+    Polygon tfmPoly = trunc.applyTransform(tfm);
+    return tfmPoly.bounds();
   }
 
   private static void addPt(List<IPoint> dest, float x, float y) {
