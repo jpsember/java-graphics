@@ -27,10 +27,7 @@ package js.graphics;
 import java.io.File;
 import java.util.List;
 
-import js.data.DataUtil;
 import js.file.Files;
-import js.geometry.IPoint;
-import js.geometry.IRect;
 import js.geometry.Matrix;
 import js.graphics.gen.Script;
 import js.json.JSMap;
@@ -163,43 +160,6 @@ public final class ScriptUtil {
     List<ScriptElement> result = arrayList();
     for (ScriptElement elem : elements)
       result.add(elem.applyTransform(transform));
-    return result;
-  }
-
-  @Deprecated // Use transform(ScriptElement list) instead
-  public static Script.Builder transform(Script sourceScriptData, Matrix transform) {
-    Script.Builder b = DataUtil.defensiveBuilder(sourceScriptData);
-    b.items().clear();
-    for (ScriptElement elem : sourceScriptData.items()) {
-      ScriptElement transformed = transformScriptElement(elem, transform);
-      b.items().add(transformed);
-    }
-    return b;
-  }
-
-  @Deprecated // See todo message
-  public static ScriptElement transformScriptElement(ScriptElement element, Matrix transform) {
-    todo("Have Rect, Mask transforms implement this behaviour");
-    ScriptElement result;
-    switch (element.tag()) {
-    default:
-      throw notSupported("Don't know how to transform element of type:", element.tag());
-    case RectElement.TAG: {
-      List<IPoint> vertices = RectElement.truncatedRect(element.bounds());
-      vertices = transform.applyIPoints(vertices);
-      IRect bounds = IRect.rectContainingPoints(IPoint.convexHull(vertices));
-      result = new RectElement(element.properties(), bounds);
-    }
-      break;
-    case MaskElement.TAG: {
-      // TODO: this code is duplicated from the RectElement code above
-      List<IPoint> vertices = RectElement.truncatedRect(element.bounds());
-      vertices = transform.applyIPoints(vertices);
-      IRect bounds = IRect.rectContainingPoints(IPoint.convexHull(vertices));
-      result = new MaskElement(element.properties(), bounds);
-    }
-      break;
-    }
     return result;
   }
 
