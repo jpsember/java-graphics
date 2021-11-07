@@ -215,8 +215,10 @@ public final class ScriptUtil {
     }
   }
 
-  @Deprecated // We probably want categoryOrZero in most cases
-  public static int category(ScriptElement element) {
+  /**
+   * Made private since we probably want categoryOrZero in most cases
+   */
+  private static int category(ScriptElement element) {
     Integer val = element.properties().category();
     return (val == null) ? -1 : val.intValue();
   }
