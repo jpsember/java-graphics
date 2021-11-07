@@ -26,6 +26,7 @@ package js.graphics;
 
 import js.geometry.IPoint;
 import js.geometry.IRect;
+import js.geometry.Matrix;
 import js.graphics.gen.ElementProperties;
 import js.json.JSMap;
 
@@ -73,6 +74,11 @@ public class PointElement extends AbstractScriptElement {
   @Override
   public PointElement withProperties(ElementProperties properties) {
     return new PointElement(properties, mLocation);
+  }
+
+  @Override
+  public PointElement applyTransform(Matrix transform) {
+    return new PointElement(properties(), transform.apply(mLocation));
   }
 
   private final IPoint mLocation;

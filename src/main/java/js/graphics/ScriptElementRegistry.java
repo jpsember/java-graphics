@@ -29,6 +29,7 @@ import static js.base.Tools.*;
 import java.util.Map;
 
 import js.geometry.IRect;
+import js.geometry.Matrix;
 import js.graphics.gen.ElementProperties;
 import js.json.JSMap;
 
@@ -84,6 +85,11 @@ public final class ScriptElementRegistry {
    * concrete instances
    */
   public static final ScriptElement PARSER = new AbstractScriptElement(null) {
+
+    @Override
+    public ScriptElement applyTransform(Matrix matrix) {
+      throw notSupported();
+    }
 
     @Override
     public IRect bounds() {

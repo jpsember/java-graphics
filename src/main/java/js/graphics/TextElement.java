@@ -64,6 +64,11 @@ public final class TextElement extends AbstractScriptElement {
     return new TextElement(properties, mText, mBounds);
   }
 
+  @Override
+  public TextElement applyTransform(Matrix matrix) {
+    return withLocation(matrix.apply(location()));
+  }
+
   public TextElement(ElementProperties properties, String text, IRect bounds) {
     super(properties);
     mText = nullToEmpty(text);
@@ -97,10 +102,6 @@ public final class TextElement extends AbstractScriptElement {
   @Override
   public String toString() {
     return text();
-  }
-
-  public TextElement applyTransform(Matrix m) {
-    return withLocation(m.apply(bounds().location()));
   }
 
   public TextElement withText(String text) {

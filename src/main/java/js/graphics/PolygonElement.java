@@ -27,6 +27,7 @@ package js.graphics;
 import static js.base.Tools.*;
 
 import js.geometry.IRect;
+import js.geometry.Matrix;
 import js.geometry.Polygon;
 import js.graphics.gen.ElementProperties;
 import js.json.JSMap;
@@ -74,6 +75,11 @@ public class PolygonElement extends AbstractScriptElement {
     Polygon poly = Polygon.DEFAULT_INSTANCE.parse(m);
     ElementProperties properties = parsePropertiesFromElement(m);
     return new PolygonElement(properties, poly);
+  }
+
+  @Override
+  public PolygonElement applyTransform(Matrix transform) {
+    return withPolygon(polygon().applyTransform(transform));
   }
 
   public Polygon polygon() {

@@ -169,7 +169,9 @@ public final class ScriptUtil {
     return b;
   }
 
+  @Deprecated // See todo message
   public static ScriptElement transformScriptElement(ScriptElement element, Matrix transform) {
+    todo("Have Rect, Mask transforms implement this behaviour");
     ScriptElement result;
     switch (element.tag()) {
     default:

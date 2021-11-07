@@ -30,6 +30,7 @@ import java.util.List;
 
 import js.geometry.IPoint;
 import js.geometry.IRect;
+import js.geometry.Matrix;
 import js.graphics.gen.ElementProperties;
 import js.json.JSList;
 import js.json.JSMap;
@@ -106,6 +107,11 @@ public class RectElement extends AbstractScriptElement {
   @Override
   public RectElement withProperties(ElementProperties properties) {
     return new RectElement(properties, bounds());
+  }
+
+  @Override
+  public RectElement applyTransform(Matrix matrix) {
+    return withBounds(bounds().applyTransform(matrix));
   }
 
   protected final IRect mBounds;
