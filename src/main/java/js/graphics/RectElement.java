@@ -64,6 +64,11 @@ public class RectElement extends AbstractScriptElement {
   }
 
   @Override
+  public final String toString() {
+    return toJson().prettyPrint();
+  }
+
+  @Override
   public JSMap toJson() {
     loadTools();
     // Rects are the default elements, so omit the tag

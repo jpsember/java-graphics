@@ -24,8 +24,6 @@
  **/
 package js.graphics;
 
-import static js.base.Tools.*;
-
 import js.geometry.IRect;
 import js.geometry.Matrix;
 import js.geometry.Polygon;
@@ -52,8 +50,12 @@ public class PolygonElement extends AbstractScriptElement {
   }
 
   @Override
+  public final String toString() {
+    return toJson().prettyPrint();
+  }
+
+  @Override
   public JSMap toJson() {
-    loadTools();
     JSMap m = toJsonAux(polygon().toJson());
     return m;
   }

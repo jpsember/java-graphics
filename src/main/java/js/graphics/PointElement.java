@@ -40,6 +40,11 @@ public class PointElement extends AbstractScriptElement {
   public static final String TAG = "pt";
 
   @Override
+  public final String toString() {
+    return toJson().prettyPrint();
+  }
+
+  @Override
   public String tag() {
     return TAG;
   }
