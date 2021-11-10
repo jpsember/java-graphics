@@ -450,4 +450,40 @@ public final class MonoImageUtil {
     return MonoImageUtil.normalize(monoImage, translate, scale);
   }
 
+  /**
+   * Construct version of image with equalized histogram
+   */
+  public static MonoImage equalizeHistogram(MonoImage image) {
+    ImageStats stats = generateStats(image);
+    int[] histogram = stats.histogram();
+    if (histogram.length == 0)
+      return image;
+    int[] cdf = new int[MAX_PIXEL_VALUE];
+    int sum = 0;
+    {
+      int i = stats.min();
+      while (i <= stats.max()) {
+        cdf[i] = sum;
+        sum += histogram[i - stats.min()];
+        i++;
+      }
+      while (i < MAX_PIXEL_VALUE)
+        cdf[i++] = sum;
+    }
+    float scaleFactor = (MAX_PIXEL_VALUE - 1) / (float) sum;
+
+    short[] map = new short[MAX_PIXEL_VALUE];
+    for (int i = 0; i < MAX_PIXEL_VALUE; i++) {
+      int scaled = Math.round(cdf[i] * scaleFactor);
+      if (scaled >= MAX_PIXEL_VALUE)
+        throw badState("scaled value is:", scaled, "for i", i, "with max", stats.max());
+      map[i] = (short) scaled;
+    }
+    short[] outPix = new short[image.pixels().length];
+    int j = 0;
+    for (short inPixel : image.pixels())
+      outPix[j++] = map[inPixel];
+    return construct(image.size(), outPix);
+  }
+
 }
