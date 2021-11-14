@@ -126,11 +126,11 @@ public final class ImgUtil {
   /**
    * Compress a 16-bit monochrome image to .rax format
    */
-  public static byte[] compressRAX(IPoint imageSize, short[] iPixels) {
-
+  public static byte[] compressRAX(MonoImage image) {
+    IPoint imageSize = image.size();
+    short[] iPixels = image.pixels();
     int imageWidth = imageSize.x;
     int imageHeight = imageSize.y;
-    checkArgument(imageWidth * imageHeight == iPixels.length);
     ByteArrayOutputStream output = new ByteArrayOutputStream((imageSize.product() * 3) / 2);
 
     // Write header
