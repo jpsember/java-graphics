@@ -102,7 +102,7 @@ public final class ImgUtil {
   // ------------------------------------------------------------------
 
   private static final int RAX_COMPRESS_HEADER_LENGTH = 6;
-  private static final int RAX_COMPRESS_FLAG = 0xfd;
+  private static final byte RAX_COMPRESS_FLAG = (byte) 0xfd;
   private static final int RAX_VERSION_1 = 1;
 
   /**
@@ -118,8 +118,84 @@ public final class ImgUtil {
     return decompressRAX(content, null);
   }
 
+  private static final int RAX_DEFAULT_PIXEL_VALUE = 20000;
+  private static final int FLIR_COMPRESS_FLAG = 0xfd;
+  private static final int FLIR_VERSION_1 = 1;
+  private static final byte JUMP_SIGNAL = -128;
+
   /**
-   * Decompress RAX pixels
+   * Compress a 16-bit monochrome image to .rax format
+   */
+  public static byte[] compressRAX(IPoint imageSize, short[] iPixels) {
+
+    int imageWidth = imageSize.x;
+    int imageHeight = imageSize.y;
+    checkArgument(imageWidth * imageHeight == iPixels.length);
+    ByteArrayOutputStream output = new ByteArrayOutputStream((imageSize.product() * 3) / 2);
+
+    // Write header
+    output.write(FLIR_COMPRESS_FLAG);
+    output.write(FLIR_VERSION_1);
+    output.write(imageWidth);
+    output.write(imageWidth >> 8);
+    output.write(imageHeight);
+    output.write(imageHeight >> 8);
+
+    int[] deltaValues = new int[imageWidth];
+
+    int rowOffset = 0;
+    for (int rowNumber = 0; rowNumber < imageHeight; rowNumber++, rowOffset += imageWidth) {
+      int rowOffsetM1 = rowOffset - imageWidth;
+      int rowOffsetM2 = rowOffsetM1 - imageWidth;
+      int prevH1, prevH2;
+      if (rowNumber == 0) {
+        prevH1 = RAX_DEFAULT_PIXEL_VALUE;
+        prevH2 = RAX_DEFAULT_PIXEL_VALUE;
+        for (int x = 0; x < imageWidth; x++) {
+          deltaValues[x] = v1Scale(prevH1 - prevH2) + prevH1;
+          prevH2 = prevH1;
+          prevH1 = iPixels[rowOffset + x];
+        }
+      } else if (rowNumber == 1) {
+        prevH1 = iPixels[0];
+        prevH2 = prevH1;
+        for (int x = 0; x < imageWidth; x++) {
+          int prevV1 = iPixels[rowOffsetM1 + x];
+          deltaValues[x] = (v1Scale(prevH1 - prevH2) + (prevH1 + prevV1)) / 2;
+          prevH2 = prevH1;
+          prevH1 = iPixels[rowOffset + x];
+        }
+      } else {
+        prevH1 = iPixels[rowOffsetM1];
+        prevH2 = iPixels[rowOffsetM2];
+        for (int x = 0; x < imageWidth; x++) {
+          int prevV1 = iPixels[rowOffsetM1 + x];
+          int prevV2 = iPixels[rowOffsetM2 + x];
+          deltaValues[x] = (v1Scale((prevH1 - prevH2) + (prevV1 - prevV2)) + (prevH1 + prevV1)) / 2;
+          prevH2 = prevH1;
+          prevH1 = iPixels[rowOffset + x];
+        }
+      }
+
+      for (int x = 0; x < imageWidth; x++) {
+        int prediction = deltaValues[x];
+        int pixel = iPixels[rowOffset + x];
+        int error = pixel - prediction;
+
+        if (error != (byte) error || error == JUMP_SIGNAL) {
+          output.write(JUMP_SIGNAL);
+          output.write(pixel);
+          output.write(pixel >> 8);
+        } else
+          output.write(error);
+      }
+    }
+
+    return output.toByteArray();
+  }
+
+  /**
+   * Decompress .rax image
    */
   public static MonoImage decompressRAX(byte[] byteBuffer, short[] outputPixelsOrNull) {
     MonoImage.Builder monoImage = MonoImage.newBuilder();
@@ -146,8 +222,8 @@ public final class ImgUtil {
       int prevH1, prevH2;
 
       if (rowNumber == 0) {
-        prevH1 = 20000;
-        prevH2 = 20000;
+        prevH1 = RAX_DEFAULT_PIXEL_VALUE;
+        prevH2 = RAX_DEFAULT_PIXEL_VALUE;
         for (int x = 0; x < imageWidth; x++) {
           int prediction = v1Scale(prevH1 - prevH2) + prevH1;
           int pixel = extractIntegerFromStream(input, prediction);
@@ -183,8 +259,12 @@ public final class ImgUtil {
     return monoImage.build();
   }
 
+  private static int v1Scale(int value) {
+    // Get same effect as multiplying by 0.280f, but without using floating point
+    return (value * 7) / 25;
+  }
+
   private static int extractIntegerFromStream(ByteArrayInputStream stream, int prediction) {
-    final byte JUMP_SIGNAL = -128;
     int result;
     byte value = (byte) stream.read();
     if (value == JUMP_SIGNAL) {
@@ -198,21 +278,16 @@ public final class ImgUtil {
     return result;
   }
 
-  private static int v1Scale(int value) {
-    // Get same effect as multiplying by 0.280f, but without using floating point
-    return (value * 7) / 25;
-  }
-
   /**
-   * Determine if an array of bytes looks like a compressed RawImage. If so,
-   * returns the presumed dimensions of the image; otherwise, null
+   * Determine if an array of bytes looks like an image in rax format. If so,
+   * return the dimensions of the image; else, null
    */
-  public static IPoint looksLikeCompressedRawImage(byte[] byteBuffer) {
+  private static IPoint looksLikeCompressedRawImage(byte[] byteBuffer) {
     IPoint result = null;
     do {
       if (byteBuffer.length < RAX_COMPRESS_HEADER_LENGTH)
         break;
-      if (byteBuffer[0] != (byte) RAX_COMPRESS_FLAG)
+      if (byteBuffer[0] != RAX_COMPRESS_FLAG)
         break;
       int imageWidth = toInt(byteBuffer[2]) + (toInt(byteBuffer[3]) << 8);
       int imageHeight = toInt(byteBuffer[4]) + (toInt(byteBuffer[5]) << 8);
