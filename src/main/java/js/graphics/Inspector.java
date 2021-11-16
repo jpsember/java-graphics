@@ -89,6 +89,12 @@ public final class Inspector extends BaseObject {
     return this;
   }
 
+  public Inspector maxSamples(int maxSamples) {
+    if (!isNull())
+      mMaxSamples = maxSamples;
+    return this;
+  }
+
   public Inspector channels(int channels) {
     if (!used())
       return this;
@@ -333,8 +339,7 @@ public final class Inspector extends BaseObject {
   }
 
   private int maxSamples() {
-    final int MAX_SAMPLES = 3;
-    return MAX_SAMPLES;
+    return mMaxSamples;
   }
 
   private File directory() {
@@ -411,5 +416,5 @@ public final class Inspector extends BaseObject {
   private ImageSet mActiveImageSet = new ImageSet();
   // If not null, this is the prefix for the active image
   private String mCurrentImagePrefix;
-
+  private int mMaxSamples = 20;
 }
