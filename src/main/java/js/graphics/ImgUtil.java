@@ -555,26 +555,15 @@ public final class ImgUtil {
    */
   public static float[] floatPixels(BufferedImage sourceImage, int numChannels, float[] destinationOrNull) {
 
-    int[] sourcePixels;
-
-    switch (sourceImage.getType()) {
-
-    default:
-      throw badArg("unsupported image type:", INDENT, sourceImage);
-
-    case BufferedImage.TYPE_INT_RGB:
-      sourcePixels = ImgUtil.rgbPixels(sourceImage);
-      break;
-    }
-
-    float[] result = DataUtil.floatArray(sourcePixels.length * numChannels, destinationOrNull);
-
+    float[] result;
     switch (sourceImage.getType()) {
 
     default:
       throw badArg("unsupported image type:", INDENT, sourceImage);
 
     case BufferedImage.TYPE_INT_RGB: {
+      int[] sourcePixels = ImgUtil.rgbPixels(sourceImage);
+      result = DataUtil.floatArray(sourcePixels.length * numChannels, destinationOrNull);
       if (numChannels == 1) {
         int j = 0;
         for (int pixel : sourcePixels) {

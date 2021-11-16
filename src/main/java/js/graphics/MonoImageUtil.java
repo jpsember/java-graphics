@@ -486,4 +486,26 @@ public final class MonoImageUtil {
     return construct(image.size(), outPix);
   }
 
+  /**
+   * Add padding to an image (or return the original if no padding required)
+   */
+  public static MonoImage addPadding(MonoImage image, int px, int py) {
+    if (px == 0 && py == 0)
+      return image;
+    int nw = image.size().x + px;
+    int nh = image.size().y + py;
+    short[] np = new short[nw * nh];
+    short[] pix = image.pixels();
+    int si = 0;
+    int di = 0;
+    for (int y = 0; y < image.size().y; y++) {
+      for (int x = 0; x < image.size().x; x++) {
+        np[di + x] = pix[si + x];
+      }
+      si += image.size().x;
+      di += nw;
+    }
+    return MonoImage.newBuilder().size(new IPoint(nw, nh)).pixels(np).build();
+  }
+
 }

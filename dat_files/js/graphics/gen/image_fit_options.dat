@@ -1,3 +1,5 @@
+// Options for fitting a source image to a target
+//
 enum js.graphics.gen.ImageFitType;
 
 fields {
