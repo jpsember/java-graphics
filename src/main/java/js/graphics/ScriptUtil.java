@@ -28,7 +28,10 @@ import java.io.File;
 import java.util.List;
 
 import js.file.Files;
+import js.geometry.IRect;
 import js.geometry.Matrix;
+import js.geometry.MyMath;
+import js.geometry.Polygon;
 import js.graphics.gen.Script;
 import js.json.JSMap;
 import js.graphics.ImgUtil;
@@ -161,6 +164,27 @@ public final class ScriptUtil {
     for (ScriptElement elem : elements)
       result.add(elem.applyTransform(transform));
     return result;
+  }
+
+  /**
+   * Construct a list of polygons representing BoxElements rotated according to
+   * their rotation parameter
+   */
+  public static List<ScriptElement> constructRotatedBoxes(List<ScriptElement> elements) {
+    List<ScriptElement> out = arrayList();
+    for (RectElement rect : elements(elements, RectElement.DEFAULT_INSTANCE)) {
+      IRect bounds = rect.bounds();
+      Polygon poly = Polygon.with(bounds);
+      int deg = ScriptUtil.rotationDegreesOrZero(rect);
+      Matrix m1 = Matrix.getTranslate(bounds.midPoint().negate());
+      Matrix m2 = Matrix.getRotate(MyMath.M_DEG * deg);
+      Matrix m3 = Matrix.getTranslate(bounds.midPoint());
+      Matrix mCombined = Matrix.preMultiply(m1, m2, m3);
+      Polygon polyTransformed = poly.applyTransform(mCombined);
+      PolygonElement polyElement = new PolygonElement(rect.properties(), polyTransformed);
+      out.add(polyElement);
+    }
+    return out;
   }
 
   /**

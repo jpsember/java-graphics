@@ -26,6 +26,9 @@ package js.graphics;
 
 import static js.base.Tools.*;
 
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+
 import js.base.BaseObject;
 import js.geometry.FRect;
 import js.geometry.IPoint;
@@ -146,6 +149,25 @@ public final class ImageFit extends BaseObject {
     if (mMatrixInv == null)
       mMatrixInv = matrix().invert();
     return mMatrixInv;
+  }
+
+  /**
+   * Apply ImageFit to a BufferedImage
+   * 
+   * @param sourceImage
+   * @param targetImageType
+   *          type of BufferedImage to return
+   */
+  public BufferedImage apply(BufferedImage sourceImage, int targetImageType) {
+    IRect destRect = transformedSourceRect();
+    IPoint targetSize = options().targetSize();
+    BufferedImage resultImage = ImgUtil.build(targetSize, targetImageType);
+    Graphics g = resultImage.getGraphics();
+    IPoint sourceSize = ImgUtil.size(sourceImage);
+    g.drawImage(sourceImage, destRect.x, destRect.y, destRect.endX(), destRect.endY(), 0, 0, sourceSize.x,
+        sourceSize.y, null);
+    g.dispose();
+    return resultImage;
   }
 
   private final ImageFitOptions mOptions;
