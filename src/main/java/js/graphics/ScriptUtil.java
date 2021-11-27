@@ -65,9 +65,6 @@ public final class ScriptUtil {
     File relativeToHome = Files.fileRelativeToDirectory(absProjDir, Files.homeDirectory());
     String relDir = relativeToHome.toString();
     File dir = new File(scriptProjectsDirectory(), relDir);
-    if (!dir.exists()) {
-      pr("...creating project directory:", INDENT, dir, ST);
-    }
     Files.S.mkdirs(dir);
     return new File(dir, SCRIPT_PROJECT_FILENAME);
   }
@@ -75,8 +72,6 @@ public final class ScriptUtil {
   private static File scriptProjectsDirectory() {
     if (sScriptProjectsDir == null) {
       sScriptProjectsDir = new File(Files.homeDirectory(), ".scredit");
-      if (alert("using temp"))
-        sScriptProjectsDir = Files.getDesktopFile("_scredit_temp_");
       Files.S.mkdirs(sScriptProjectsDir);
     }
     return sScriptProjectsDir;
