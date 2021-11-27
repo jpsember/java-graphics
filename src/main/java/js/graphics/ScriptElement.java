@@ -81,7 +81,6 @@ public interface ScriptElement extends AbstractData {
    */
   ScriptElement withProperties(ElementProperties properties);
 
-
   /**
    * Return transformed version of element
    */
