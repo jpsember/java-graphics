@@ -508,4 +508,16 @@ public final class MonoImageUtil {
     return MonoImage.newBuilder().size(new IPoint(nw, nh)).pixels(np).build();
   }
 
+  /**
+   * Construct a MonoImage filled with a single value
+   */
+  public static MonoImage constantImage(IPoint size, int value) {
+    MonoImage image = MonoImage.newBuilder() //
+        .pixels(new short[size.product()])//
+        .size(size)//
+        .build();
+    Arrays.fill(image.pixels(), (short) value);
+    return image;
+  }
+
 }
