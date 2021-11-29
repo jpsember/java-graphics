@@ -69,7 +69,7 @@ public final class ScriptUtil {
     return new File(dir, SCRIPT_PROJECT_FILENAME);
   }
 
-  private static File scriptProjectsDirectory() {
+  public static File scriptProjectsDirectory() {
     if (sScriptProjectsDir == null) {
       sScriptProjectsDir = new File(Files.homeDirectory(), ".scredit");
       Files.S.mkdirs(sScriptProjectsDir);
@@ -264,6 +264,10 @@ public final class ScriptUtil {
 
   public static boolean hasConfidence(ScriptElement element) {
     return element.properties().confidence() != null;
+  }
+
+  public static boolean hasCategory(ScriptElement element) {
+    return element.properties().category() != null;
   }
 
   /**

@@ -127,8 +127,13 @@ public final class ImgUtil {
    * Compress a 16-bit monochrome image to .rax format
    */
   public static byte[] compressRAX(MonoImage image) {
-    IPoint imageSize = image.size();
-    short[] iPixels = image.pixels();
+    return compressRAX(image.size(), image.pixels());
+  }
+
+  /**
+   * Compress a 16-bit monochrome image to .rax format
+   */
+  public static byte[] compressRAX(IPoint imageSize, short[] iPixels) {
     int imageWidth = imageSize.x;
     int imageHeight = imageSize.y;
     ByteArrayOutputStream output = new ByteArrayOutputStream((imageSize.product() * 3) / 2);
