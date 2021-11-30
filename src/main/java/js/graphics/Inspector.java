@@ -32,13 +32,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import js.graphics.gen.Script;
 
 import js.base.BaseObject;
+import js.data.AbstractData;
 import js.file.Files;
 import js.geometry.IPoint;
-import js.graphics.gen.Script;
 import js.json.JSList;
 import js.json.JSMap;
+import js.json.JSObject;
 import js.graphics.gen.MonoImage;
 
 /**
@@ -103,13 +105,13 @@ public final class Inspector extends BaseObject {
   }
 
   public Inspector normalize() {
-    assertNoImageYet();
+    assertNoItemSpecifiedYet();
     mNormalize = true;
     return this;
   }
 
   public Inspector sharpen() {
-    assertNoImageYet();
+    assertNoItemSpecifiedYet();
     mSharpen = true;
     return this;
   }
@@ -156,10 +158,10 @@ public final class Inspector extends BaseObject {
       prefix = nullToEmpty(prefix);
       log("create image, prefix:", quote(prefix));
 
-      flushCurrentImage();
+      flushCurrentItem();
 
       // If there's no active set, or the active set already contains this prefix, start a new one
-      if (mActiveImageSet.sampleNumber < 0 || mPrefixSet.contains(prefix)) {
+      if (mActiveItemSet.sampleNumber < 0 || mPrefixSet.contains(prefix)) {
         startNewSet();
       }
       mPrefixSet.add(prefix);
@@ -169,13 +171,14 @@ public final class Inspector extends BaseObject {
         prefix = Integer.toString(mPrefixSet.size()) + "_" + prefix;
       }
 
-      mCurrentImagePrefix = prefix;
+      mCurrentItemPrefix = prefix;
       log("prefix set:", mPrefixSet);
 
       // Discard ephemeral state 
       //
       mElements.clear();
       mBufferedImage = null;
+      mJsonObject = null;
       mImageFloats = null;
       mImageSize = null;
       mNormalize = false;
@@ -187,8 +190,8 @@ public final class Inspector extends BaseObject {
   private void startNewSet() {
     log("start new ImageSet");
     mPrefixSet.clear();
-    ImageSet newSet = new ImageSet();
-    mActiveImageSet = newSet;
+    ItemSet newSet = new ItemSet();
+    mActiveItemSet = newSet;
     newSet.sampleNumber = mSampleCount;
     mSampleCount++;
     int rval = random().nextInt(sampleCount());
@@ -196,14 +199,14 @@ public final class Inspector extends BaseObject {
       newSet.sampleSlot = rval;
 
     if (newSet.isUsed()) {
-      ImageSet oldSet = mSamples.put(newSet.sampleSlot, newSet);
+      ItemSet oldSet = mSamples.put(newSet.sampleSlot, newSet);
       if (oldSet != null)
         discard(oldSet);
     }
     log("sample count:", mSampleCount, INDENT, newSet);
   }
 
-  private void discard(ImageSet imageSet) {
+  private void discard(ItemSet imageSet) {
     log("discarding:", INDENT, imageSet);
     for (File file : imageSet.files)
       files().deleteFile(file);
@@ -217,52 +220,77 @@ public final class Inspector extends BaseObject {
   public boolean used() {
     if (isNull())
       return false;
-    return mActiveImageSet.isUsed();
+    return mActiveItemSet.isUsed();
   }
 
   /**
-   * Flush current image (if one exists) to filesystem
+   * Flush current item (if one exists) to filesystem
    */
-  private void flushCurrentImage() {
-    String prefix = mCurrentImagePrefix;
+  private void flushCurrentItem() {
+    String prefix = mCurrentItemPrefix;
     if (prefix == null)
       return;
     if (used()) {
-      String baseName = String.format("%04d", mActiveImageSet.sampleNumber);
+      String baseName = String.format("%04d", mActiveItemSet.sampleNumber);
       if (!prefix.isEmpty())
         baseName = baseName + "_" + prefix;
 
       File filename = new File(directory(), baseName);
-      BufferedImage img = bufferedImage();
-      File imageFile = Files.setExtension(filename, ImgUtil.PNG_EXT);
-      log("write image:", imageFile.getName());
-      ImgUtil.writeImage(files(), img, imageFile);
-      mActiveImageSet.files.add(imageFile);
-      File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
-      ScriptUtil.writeIfUseful(files(), script(), scriptFile);
-      if (scriptFile.exists())
-        mActiveImageSet.files.add(scriptFile);
+
+      // Handle the item differently if it is an image vs a json object
+
+      if (mJsonObject == null) {
+        BufferedImage img = bufferedImage();
+        File imageFile = Files.setExtension(filename, ImgUtil.PNG_EXT);
+        log("write image:", imageFile.getName());
+        ImgUtil.writeImage(files(), img, imageFile);
+        mActiveItemSet.files.add(imageFile);
+        File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
+        ScriptUtil.writeIfUseful(files(), script(), scriptFile);
+        if (scriptFile.exists())
+          mActiveItemSet.files.add(scriptFile);
+      } else {
+        File jsonFile = Files.setExtension(filename, Files.EXT_JSON);
+        log("write:", jsonFile.getName());
+        files().writePretty(jsonFile, mJsonObject);
+        mActiveItemSet.files.add(jsonFile);
+      }
     }
-    mCurrentImagePrefix = null;
+    mCurrentItemPrefix = null;
   }
 
   public Inspector image(float[] image) {
     if (used()) {
-      assertNoImageYet();
+      assertNoItemSpecifiedYet();
       mImageFloats = image;
     }
     return this;
   }
 
-  private void assertNoImageYet() {
-    if (mImageFloats != null || mBufferedImage != null)
-      badState("Inspector image already exists");
+  private void assertNoItemSpecifiedYet() {
+    if (mImageFloats != null || mBufferedImage != null || mJsonObject != null)
+      badState("Inspector item already specified");
   }
 
   public Inspector image(BufferedImage image) {
     if (used()) {
-      assertNoImageYet();
+      assertNoItemSpecifiedYet();
       mBufferedImage = applyImageEffects(ImgUtil.deepCopy(image));
+    }
+    return this;
+  }
+
+  public Inspector json(JSObject jsonObject) {
+    if (used()) {
+      assertNoItemSpecifiedYet();
+      mJsonObject = jsonObject;
+    }
+    return this;
+  }
+
+  public Inspector abstractData(AbstractData abstractData) {
+    if (used()) {
+      json(abstractData.toJson());
     }
     return this;
   }
@@ -375,9 +403,9 @@ public final class Inspector extends BaseObject {
   }
 
   /**
-   * A set of images, which may or may not be used
+   * A set of items, which may or may not be used
    */
-  private static class ImageSet extends BaseObject {
+  private static class ItemSet extends BaseObject {
     int sampleSlot = -1;
 
     // Default sample number is -1 to indicate an uninitialized set
@@ -411,10 +439,11 @@ public final class Inspector extends BaseObject {
   private boolean mSharpen;
   private List<ScriptElement> mElements = arrayList();
   private BufferedImage mBufferedImage;
+  private JSObject mJsonObject;
   private Set<String> mPrefixSet = hashSet();
-  private Map<Integer, ImageSet> mSamples = hashMap();
-  private ImageSet mActiveImageSet = new ImageSet();
+  private Map<Integer, ItemSet> mSamples = hashMap();
+  private ItemSet mActiveItemSet = new ItemSet();
   // If not null, this is the prefix for the active image
-  private String mCurrentImagePrefix;
+  private String mCurrentItemPrefix;
   private int mMaxSamples = 20;
 }
