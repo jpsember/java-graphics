@@ -179,6 +179,7 @@ public final class Inspector extends BaseObject {
       mElements.clear();
       mBufferedImage = null;
       mJsonObject = null;
+      mMonoImage = null;
       mImageFloats = null;
       mImageSize = null;
       mNormalize = false;
@@ -238,22 +239,28 @@ public final class Inspector extends BaseObject {
       File filename = new File(directory(), baseName);
 
       // Handle the item differently if it is an image vs a json object
-
-      if (mJsonObject == null) {
-        BufferedImage img = bufferedImage();
-        File imageFile = Files.setExtension(filename, ImgUtil.PNG_EXT);
-        log("write image:", imageFile.getName());
-        ImgUtil.writeImage(files(), img, imageFile);
+      if (mJsonObject != null) {
+        File jsonFile = Files.setExtension(filename, Files.EXT_JSON);
+        log("write:", jsonFile.getName());
+        files().writePretty(jsonFile, mJsonObject);
+        mActiveItemSet.files.add(jsonFile);
+      } else {
+        File imageFile;
+        if (mMonoImage != null) {
+          imageFile = Files.setExtension(filename, ImgUtil.RAX_EXT);
+          log("write image:", imageFile.getName());
+          files().write(ImgUtil.compressRAX(mMonoImage), imageFile);
+        } else {
+          BufferedImage img = bufferedImage();
+          imageFile = Files.setExtension(filename, ImgUtil.PNG_EXT);
+          log("write image:", imageFile.getName());
+          ImgUtil.writeImage(files(), img, imageFile);
+        }
         mActiveItemSet.files.add(imageFile);
         File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
         ScriptUtil.writeIfUseful(files(), script(), scriptFile);
         if (scriptFile.exists())
           mActiveItemSet.files.add(scriptFile);
-      } else {
-        File jsonFile = Files.setExtension(filename, Files.EXT_JSON);
-        log("write:", jsonFile.getName());
-        files().writePretty(jsonFile, mJsonObject);
-        mActiveItemSet.files.add(jsonFile);
       }
     }
     mCurrentItemPrefix = null;
@@ -268,7 +275,7 @@ public final class Inspector extends BaseObject {
   }
 
   private void assertNoItemSpecifiedYet() {
-    if (mImageFloats != null || mBufferedImage != null || mJsonObject != null)
+    if (mImageFloats != null || mBufferedImage != null || mJsonObject != null || mMonoImage != null)
       badState("Inspector item already specified");
   }
 
@@ -284,6 +291,15 @@ public final class Inspector extends BaseObject {
     if (used()) {
       assertNoItemSpecifiedYet();
       mJsonObject = jsonObject;
+    }
+    return this;
+  }
+
+  public Inspector image(MonoImage monoImage) {
+    if (used()) {
+      assertNoItemSpecifiedYet();
+      mMonoImage = monoImage;
+      mImageSize = mMonoImage.size();
     }
     return this;
   }
@@ -330,7 +346,6 @@ public final class Inspector extends BaseObject {
       }
       if (mBufferedImage == null)
         throw badState("no BufferedImage available");
-
       mBufferedImage = applyImageEffects(mBufferedImage);
     }
     return mBufferedImage;
@@ -440,6 +455,7 @@ public final class Inspector extends BaseObject {
   private List<ScriptElement> mElements = arrayList();
   private BufferedImage mBufferedImage;
   private JSObject mJsonObject;
+  private MonoImage mMonoImage;
   private Set<String> mPrefixSet = hashSet();
   private Map<Integer, ItemSet> mSamples = hashMap();
   private ItemSet mActiveItemSet = new ItemSet();
