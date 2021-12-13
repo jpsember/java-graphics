@@ -94,11 +94,33 @@ public final class ScriptUtil {
   }
 
   public static Script from(File scriptFile) {
-    return Files.parseAbstractDataOpt(Script.DEFAULT_INSTANCE, scriptFile);
+    return validate(Files.parseAbstractDataOpt(Script.DEFAULT_INSTANCE, scriptFile));
   }
 
   public static Script from(JSMap jsonMap) {
-    return Files.parseAbstractDataOpt(Script.DEFAULT_INSTANCE, jsonMap);
+    return validate(Files.parseAbstractDataOpt(Script.DEFAULT_INSTANCE, jsonMap));
+  }
+
+  private static Script validate(Script script) {
+    if (alert("performing validation")) {
+      Script.Builder b = script.build().toBuilder();
+      List<ScriptElement> elems = arrayList();
+      for (ScriptElement elem : script.items()) {
+        if (elem.is(PolygonElement.DEFAULT_INSTANCE)) {
+          PolygonElement poly = (PolygonElement) elem;
+          Polygon p = poly.polygon();
+          if (p.numVertices() < (p.isClosed() ? 3 : 2)) {
+            pr("illformed polygon found in script:", INDENT, elem);
+            continue;
+          }
+
+        }
+        elems.add(elem);
+      }
+      b.items(elems);
+      return b.build();
+    }
+    return script;
   }
 
   /**
@@ -217,11 +239,15 @@ public final class ScriptUtil {
    */
   public static void writeIfUseful(Files fileManager, Script scriptData, File destinationFile) {
     Script built = scriptData.build();
-    if (!built.equals(Script.DEFAULT_INSTANCE)) {
+    if (isUseful(built)) {
       fileManager.write(destinationFile, built);
     } else {
       fileManager.deleteFile(destinationFile);
     }
+  }
+
+  public static boolean isUseful(Script script) {
+    return !script.equals(Script.DEFAULT_INSTANCE);
   }
 
   /**
