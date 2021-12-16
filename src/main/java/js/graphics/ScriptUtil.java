@@ -309,7 +309,6 @@ public final class ScriptUtil {
   public static final int ROT_MIN = -90;
   public static final int ROT_MAX = 90;
 
-  public static final ScriptUtil DEFAULT_INSTANCE = new ScriptUtil();
   public static final String TAG_KEY = "";
   public static final String TAG_PROPERTIES = "p";
 
