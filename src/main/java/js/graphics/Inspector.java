@@ -232,7 +232,7 @@ public final class Inspector extends BaseObject {
     if (prefix == null)
       return;
     if (used()) {
-      String baseName = String.format("%04d", mActiveItemSet.sampleNumber);
+      String baseName = String.format("%07d", mActiveItemSet.sampleNumber);
       if (!prefix.isEmpty())
         baseName = baseName + "_" + prefix;
 
