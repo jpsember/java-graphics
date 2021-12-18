@@ -1,0 +1,8 @@
+fields {
+
+  // Name of image, or empty string if there isn't one
+  string image_name;
+
+  // Name of script, which may not exist (but won't be empty)
+  string script_name;
+}

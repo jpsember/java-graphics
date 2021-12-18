@@ -26,6 +26,9 @@ package js.graphics;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.FileUtils;
 
 import js.file.Files;
 import js.geometry.IRect;
@@ -33,6 +36,7 @@ import js.geometry.Matrix;
 import js.geometry.MyMath;
 import js.geometry.Polygon;
 import js.graphics.gen.Script;
+import js.graphics.gen.ScriptFileEntry;
 import js.json.JSMap;
 import js.graphics.ImgUtil;
 
@@ -182,6 +186,44 @@ public final class ScriptUtil {
   // ------------------------------------------------------------------
   // Project utilities
   // ------------------------------------------------------------------
+
+  private static String[] sFileExtImages = { ImgUtil.JPEG_EXT, "jpeg", ImgUtil.PNG_EXT, ImgUtil.RAX_EXT };
+  private static String[] sFileExtAnnotation = { Files.EXT_JSON };
+
+  public static List<ScriptFileEntry> buildScriptList(File projectDirectory) {
+
+    Map<String, ScriptFileEntry> fileRootSet = hashMap();
+
+    for (File imageFile : FileUtils.listFiles(projectDirectory, sFileExtImages, false)) {
+      String key = Files.basename(imageFile);
+      File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
+      ScriptFileEntry entry = ScriptFileEntry.newBuilder() //
+          .imageName(imageFile.getName()) //
+          .scriptName(scriptFile.getName()) //
+          .build();
+      ScriptFileEntry dup = fileRootSet.put(key, entry);
+      if (dup != null)
+        throw badState("Multiple images with name:", key);
+    }
+
+    File scriptsDir = ScriptUtil.scriptDirForProject(projectDirectory);
+    if (scriptsDir.exists()) {
+      for (File scriptFile : FileUtils.listFiles(scriptsDir, sFileExtAnnotation, false)) {
+        String key = Files.basename(scriptFile);
+        if (fileRootSet.containsKey(key))
+          continue;
+        fileRootSet.put(key, ScriptFileEntry.newBuilder() //
+            .scriptName(key + "." + Files.EXT_JSON) //
+            .build());
+      }
+    }
+
+    // Sort the scripts by filename 
+    List<ScriptFileEntry> entries = arrayList();
+    entries.addAll(fileRootSet.values());
+    entries.sort((a, b) -> a.scriptName().compareTo(b.scriptName()));
+    return entries;
+  }
 
   public static void createProject(File directory, JSMap optMap) {
     File path = projectFileForProject(directory);
