@@ -76,12 +76,6 @@ public class InspectorTest extends MyTestCase {
     }
   }
 
-  private int popCount() {
-    return mPopCount;
-  }
-
-  private int mPopCount;
-
   private Inspector insp() {
     if (mInspector == null) {
       mInspector = Inspector.build(generatedFile("inspection")).seed(1234);
@@ -89,6 +83,11 @@ public class InspectorTest extends MyTestCase {
     return mInspector;
   }
 
+  private int popCount() {
+    return mPopCount;
+  }
+
   private Inspector mInspector;
+  private int mPopCount;
 
 }

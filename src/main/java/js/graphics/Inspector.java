@@ -497,8 +497,8 @@ public final class Inspector extends BaseObject {
     }
 
     private final int mSampleSlot;
-    private int mSampleNumber;
-    private List<File> mFiles = arrayList();
+    private final int mSampleNumber;
+    private final List<File> mFiles = arrayList();
   }
 
   private File mDirectory;
