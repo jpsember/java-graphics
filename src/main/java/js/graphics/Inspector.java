@@ -83,6 +83,19 @@ public final class Inspector extends BaseObject {
     log("constructed Inspector:", INDENT, this);
   }
 
+  public Inspector withBackup(boolean f) {
+    checkState(mPreparedDirectory == null, "directory already prepared");
+    mWithBackup = f;
+    return this;
+  }
+
+  public Inspector seed(long randomSeed) {
+    if (randomSeed <= 0)
+      randomSeed = System.currentTimeMillis();
+    mRandom = new Random(randomSeed);
+    return this;
+  }
+
   public Inspector imageSize(IPoint size) {
     if (!used())
       return this;
@@ -398,8 +411,13 @@ public final class Inspector extends BaseObject {
     if (dir == null)
       dir = Files.getDesktopFile("_SKIP_inspection");
     checkArgument(dir.getName().endsWith("inspection"),
-        "For safetly, inspection directory must end with 'inspection'");
-    files().rebuild(dir, "scredit_project.txt");
+        "For safety, inspection directory must end with 'inspection'");
+    if (mWithBackup)
+      files().rebuild(dir, "scredit_project.txt");
+    else {
+      files().deleteDirectory(dir);
+      files().mkdirs(dir);
+    }
     mPreparedDirectory = dir;
   }
 
@@ -409,7 +427,7 @@ public final class Inspector extends BaseObject {
 
   private Random random() {
     if (mRandom == null)
-      mRandom = new Random(System.currentTimeMillis());
+      seed(0);
     return mRandom;
   }
 
@@ -486,4 +504,5 @@ public final class Inspector extends BaseObject {
   // If not null, this is the prefix for the active image
   private String mCurrentItemPrefix;
   private int mMaxSamples = 20;
+  private boolean mWithBackup;
 }
