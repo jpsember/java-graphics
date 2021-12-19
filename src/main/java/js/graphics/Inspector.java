@@ -90,9 +90,10 @@ public final class Inspector extends BaseObject {
   }
 
   public Inspector seed(long randomSeed) {
-    if (randomSeed <= 0)
-      randomSeed = System.currentTimeMillis();
-    mRandom = new Random(randomSeed);
+    if (!isNull()) {
+      assertNotStarted();
+      mRandomSeed = randomSeed;
+    }
     return this;
   }
 
@@ -105,8 +106,15 @@ public final class Inspector extends BaseObject {
   }
 
   public Inspector maxSamples(int maxSamples) {
-    if (!isNull())
+    if (!isNull()) {
+      assertNotStarted();
       mMaxSamples = maxSamples;
+      int offset = 0;
+      if (maxSamples >= 30) {
+        offset = 5 * maxSamples;
+      }
+      mStartSampleOffset = offset;
+    }
     return this;
   }
 
@@ -131,6 +139,11 @@ public final class Inspector extends BaseObject {
 
   private boolean isNull() {
     return this == NULL_INSPECTOR;
+  }
+
+  private void assertNotStarted() {
+    if (mSampleCount > 0)
+      throw badState("Inspector samples have already started");
   }
 
   @Override
@@ -206,7 +219,7 @@ public final class Inspector extends BaseObject {
     mPrefixSet.clear();
 
     int sampleSlot = -1;
-    int rval = random().nextInt(1 + sampleCount());
+    int rval = random().nextInt(1 + mStartSampleOffset + sampleCount());
     if (rval < maxSamples())
       sampleSlot = rval;
 
@@ -413,7 +426,7 @@ public final class Inspector extends BaseObject {
     checkArgument(dir.getName().endsWith("inspection"),
         "For safety, inspection directory must end with 'inspection'");
     if (mWithBackup)
-      files().rebuild(dir, ScriptUtil.SCRIPT_PROJECT_FILENAME);
+      files().backupAndRebuild(dir);
     else {
       files().deleteDirectory(dir);
       files().mkdirs(dir);
@@ -426,8 +439,12 @@ public final class Inspector extends BaseObject {
   }
 
   private Random random() {
-    if (mRandom == null)
-      seed(0);
+    if (mRandom == null) {
+      long randomSeed = mRandomSeed;
+      if (randomSeed <= 0)
+        randomSeed = System.currentTimeMillis();
+      mRandom = new Random(randomSeed);
+    }
     return mRandom;
   }
 
@@ -486,8 +503,13 @@ public final class Inspector extends BaseObject {
 
   private File mDirectory;
   private File mPreparedDirectory;
-  private int mSampleCount;
   private Random mRandom;
+  private long mRandomSeed;
+  private int mSampleCount;
+
+  // To avoid generating a flurry of samples initially when the desired sample count is large,
+  // we act as if we have already generated a number of samples by setting this offset to a value > 0
+  private int mStartSampleOffset;
 
   private int mImageChannels = 1;
   private float[] mImageFloats;

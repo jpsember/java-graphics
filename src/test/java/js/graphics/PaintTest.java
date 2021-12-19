@@ -46,7 +46,7 @@ public class PaintTest extends MyTestCase {
   public void plotText() {
     pt().font(1f);
     pt().apply(g());
-    todo("Why is drawString so slow (first time at least)?");
+    // TODO: Why is drawString so slow (first time at least)? 
     g().drawString("Hello", 20, 40);
     assertImage();
   }
