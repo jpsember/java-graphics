@@ -413,7 +413,7 @@ public final class Inspector extends BaseObject {
     checkArgument(dir.getName().endsWith("inspection"),
         "For safety, inspection directory must end with 'inspection'");
     if (mWithBackup)
-      files().rebuild(dir, "scredit_project.txt");
+      files().rebuild(dir, ScriptUtil.SCRIPT_PROJECT_FILENAME);
     else {
       files().deleteDirectory(dir);
       files().mkdirs(dir);
