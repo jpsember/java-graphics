@@ -161,7 +161,7 @@ public final class Inspector extends BaseObject {
       flushCurrentItem();
 
       // If there's no active set, or the active set already contains this prefix, start a new one
-      if (mActiveItemSet.sampleNumber < 0 || mPrefixSet.contains(prefix)) {
+      if (mActiveItemSet == null || mPrefixSet.contains(prefix)) {
         startNewSet();
       }
       mPrefixSet.add(prefix);
@@ -191,16 +191,18 @@ public final class Inspector extends BaseObject {
   private void startNewSet() {
     log("start new ImageSet");
     mPrefixSet.clear();
-    ItemSet newSet = new ItemSet();
-    mActiveItemSet = newSet;
-    newSet.sampleNumber = mSampleCount;
-    mSampleCount++;
-    int rval = random().nextInt(sampleCount());
+
+    int sampleSlot = -1;
+    int rval = random().nextInt(1 + sampleCount());
     if (rval < maxSamples())
-      newSet.sampleSlot = rval;
+      sampleSlot = rval;
+
+    ItemSet newSet = new ItemSet(sampleSlot, mSampleCount);
+    mActiveItemSet = newSet;
+    mSampleCount++;
 
     if (newSet.isUsed()) {
-      ItemSet oldSet = mSamples.put(newSet.sampleSlot, newSet);
+      ItemSet oldSet = mSamples.put(newSet.sampleSlot(), newSet);
       if (oldSet != null)
         discard(oldSet);
     }
@@ -209,7 +211,7 @@ public final class Inspector extends BaseObject {
 
   private void discard(ItemSet imageSet) {
     log("discarding:", INDENT, imageSet);
-    for (File file : imageSet.files)
+    for (File file : imageSet.files())
       files().deleteFile(file);
   }
 
@@ -221,7 +223,7 @@ public final class Inspector extends BaseObject {
   public boolean used() {
     if (isNull())
       return false;
-    return mActiveItemSet.isUsed();
+    return mActiveItemSet != null && mActiveItemSet.isUsed();
   }
 
   /**
@@ -232,7 +234,7 @@ public final class Inspector extends BaseObject {
     if (prefix == null)
       return;
     if (used()) {
-      String baseName = String.format("%07d", mActiveItemSet.sampleNumber);
+      String baseName = String.format("%07d", mActiveItemSet.sampleNumber());
       if (!prefix.isEmpty())
         baseName = baseName + "_" + prefix;
 
@@ -243,7 +245,7 @@ public final class Inspector extends BaseObject {
         File jsonFile = Files.setExtension(filename, Files.EXT_JSON);
         log("write:", jsonFile.getName());
         files().writePretty(jsonFile, mJsonObject);
-        mActiveItemSet.files.add(jsonFile);
+        mActiveItemSet.addFile(jsonFile);
       } else {
         File imageFile;
         if (mMonoImage != null) {
@@ -256,11 +258,11 @@ public final class Inspector extends BaseObject {
           log("write image:", imageFile.getName());
           ImgUtil.writeImage(files(), img, imageFile);
         }
-        mActiveItemSet.files.add(imageFile);
+        mActiveItemSet.addFile(imageFile);
         File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
         ScriptUtil.writeIfUseful(files(), script(), scriptFile);
         if (scriptFile.exists())
-          mActiveItemSet.files.add(scriptFile);
+          mActiveItemSet.addFile(scriptFile);
       }
     }
     mCurrentItemPrefix = null;
@@ -418,28 +420,51 @@ public final class Inspector extends BaseObject {
   }
 
   /**
-   * A set of items, which may or may not be used
+   * A set of items comprising a single sample
+   * 
+   * (an ItemSet may be 'unused', which means this sample is not going to be
+   * saved)
    */
   private static class ItemSet extends BaseObject {
-    int sampleSlot = -1;
 
-    // Default sample number is -1 to indicate an uninitialized set
-    int sampleNumber = -1;
-    List<File> files = arrayList();
+    public ItemSet(int slot, int sampleNumber) {
+      mSampleSlot = slot;
+      mSampleNumber = sampleNumber;
+    }
+
+    public int sampleSlot() {
+      return mSampleSlot;
+    }
+
+    public int sampleNumber() {
+      return mSampleNumber;
+    }
 
     boolean isUsed() {
-      return sampleSlot >= 0;
+      return sampleSlot() >= 0;
     }
 
     @Override
     public JSMap toJson() {
       JSMap m = super.toJson();
-      m.put("slot", sampleSlot);
-      m.put("sample_number", sampleNumber);
+      m.put("slot", sampleSlot());
+      m.put("sample_number", sampleNumber());
       m.put("used", isUsed());
-      m.put("files", JSList.withStringRepresentationsOf(files));
+      m.put("files", JSList.withStringRepresentationsOf(files()));
       return m;
     }
+
+    public void addFile(File file) {
+      mFiles.add(file);
+    }
+
+    public List<File> files() {
+      return mFiles;
+    }
+
+    private final int mSampleSlot;
+    private int mSampleNumber;
+    private List<File> mFiles = arrayList();
   }
 
   private File mDirectory;
@@ -458,7 +483,7 @@ public final class Inspector extends BaseObject {
   private MonoImage mMonoImage;
   private Set<String> mPrefixSet = hashSet();
   private Map<Integer, ItemSet> mSamples = hashMap();
-  private ItemSet mActiveItemSet = new ItemSet();
+  private ItemSet mActiveItemSet;
   // If not null, this is the prefix for the active image
   private String mCurrentItemPrefix;
   private int mMaxSamples = 20;
