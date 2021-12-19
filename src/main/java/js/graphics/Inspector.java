@@ -111,7 +111,8 @@ public final class Inspector extends BaseObject {
       mMaxSamples = maxSamples;
       int offset = 0;
       if (maxSamples >= 30) {
-        offset = 5 * maxSamples;
+        // Assume we will only want to generate 1 of every 50 population elements
+        offset = 50 * maxSamples;
       }
       mStartSampleOffset = offset;
     }
