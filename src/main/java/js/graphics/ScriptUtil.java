@@ -106,7 +106,7 @@ public final class ScriptUtil {
   }
 
   private static Script validate(Script script) {
-    if (alert("performing validation")) {
+    if (false && alert("performing validation")) {
       Script.Builder b = script.build().toBuilder();
       List<ScriptElement> elems = arrayList();
       for (ScriptElement elem : script.items()) {
