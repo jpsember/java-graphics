@@ -276,12 +276,12 @@ public final class Inspector extends BaseObject {
       } else {
         File imageFile;
         if (mMonoImage != null) {
-          imageFile = Files.setExtension(filename, ImgUtil.RAX_EXT);
+          imageFile = Files.setExtension(filename, ImgUtil.EXT_RAX);
           log("write image:", imageFile.getName());
           files().write(ImgUtil.compressRAX(mMonoImage), imageFile);
         } else {
           BufferedImage img = bufferedImage();
-          imageFile = Files.setExtension(filename, ImgUtil.PNG_EXT);
+          imageFile = Files.setExtension(filename, ImgUtil.EXT_PNG);
           log("write image:", imageFile.getName());
           ImgUtil.writeImage(files(), img, imageFile);
         }

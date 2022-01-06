@@ -258,7 +258,7 @@ public class JImageUtilTest extends MyTestCase {
 
     JImage output;
 
-    File imageFile = Files.setExtension(imageBaseFile, ImgUtil.JMG_EXT);
+    File imageFile = Files.setExtension(imageBaseFile, ImgUtil.EXT_JMG);
     if (imageFile.exists()) {
       output = JImageUtil.decode(Files.toByteArray(imageFile));
     } else {
@@ -278,7 +278,7 @@ public class JImageUtilTest extends MyTestCase {
         img.wPixels(DataUtil.bytesToShortsBigEndian(Files.toByteArray(imageSource)));
         output = img.build();
       } else {
-        imageSource = Files.setExtension(imageBaseFile, ImgUtil.PNG_EXT);
+        imageSource = Files.setExtension(imageBaseFile, ImgUtil.EXT_PNG);
         log("...converting from png");
         BufferedImage srcImg = ImgUtil.read(imageSource);
         output = JImageUtil.from(srcImg);

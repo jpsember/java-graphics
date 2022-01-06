@@ -60,12 +60,21 @@ public final class ImgUtil {
   // Image file extensions
   // ------------------------------------------------------------------
 
-  public static final String JPEG_EXT = "jpg";
-  public static final String PNG_EXT = "png";
-  public static final String JMG_EXT = "jmg";
-  public static final String RAX_EXT = "rax";
+  public static final String EXT_JPEG = "jpg";
+  public static final String EXT_PNG = "png";
+  public static final String EXT_JMG = "jmg";
+  public static final String EXT_RAX = "rax";
 
-  public static final List<String> IMAGE_EXTENSIONS = arrayList(JPEG_EXT, PNG_EXT, "jpeg", RAX_EXT);
+  @Deprecated
+  public static final String JPEG_EXT = EXT_JPEG;
+  @Deprecated
+  public static final String PNG_EXT = EXT_PNG;
+  @Deprecated
+  public static final String JMG_EXT = EXT_JMG;
+  @Deprecated
+  public static final String RAX_EXT = EXT_RAX;
+
+  public static final List<String> IMAGE_EXTENSIONS = arrayList(EXT_JPEG, EXT_PNG, "jpeg", EXT_RAX);
   public static final int PREFERRED_IMAGE_TYPE_COLOR = BufferedImage.TYPE_INT_RGB;
 
   // ------------------------------------------------------------------
@@ -75,7 +84,7 @@ public final class ImgUtil {
   public static BufferedImage read(File src) {
     // If file is a custom format, treat appropriately
     String ext = Files.getExtension(src);
-    if (ext.equals(RAX_EXT)) {
+    if (ext.equals(EXT_RAX)) {
       MonoImage monoImage = readRax(Files.openInputStream(src));
       return MonoImageUtil.to16BitGrayscaleBufferedImage(monoImage);
     }
@@ -326,7 +335,7 @@ public final class ImgUtil {
     try {
       outStream = new ByteArrayOutputStream();
       if (requiredQualityOrNull == null) {
-        boolean wrote = ImageIO.write(img, JPEG_EXT, outStream);
+        boolean wrote = ImageIO.write(img, EXT_JPEG, outStream);
         if (!wrote)
           throw die("No writer found for image:", img);
       } else {
@@ -354,7 +363,7 @@ public final class ImgUtil {
   public static byte[] toPNG(BufferedImage img) {
     try {
       ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-      ImageIO.write(img, PNG_EXT, outStream);
+      ImageIO.write(img, EXT_PNG, outStream);
       return outStream.toByteArray();
     } catch (IOException e) {
       throw Files.asFileException(e);
@@ -368,19 +377,19 @@ public final class ImgUtil {
   public static void writeImage(Files files, BufferedImage img, File dest) {
     String ext = Files.getExtension(dest);
     byte[] bytes = null;
-    if (ext.equals(JPEG_EXT)) {
+    if (ext.equals(EXT_JPEG)) {
       int type = img.getType();
       if (type != BufferedImage.TYPE_3BYTE_BGR && type != BufferedImage.TYPE_INT_RGB)
         badArg("image has unexpected type:", type);
       bytes = toJPEG(img, null);
-    } else if (ext.equals(PNG_EXT))
+    } else if (ext.equals(EXT_PNG))
       bytes = toPNG(img);
     checkState(bytes != null, "Unsupported image type:", dest);
     files.write(toPNG(img), dest);
   }
 
   public static void writeJPG(Files files, BufferedImage img, File dest, Integer requiredTypeOrNull) {
-    checkArgument(Files.getExtension(dest).equals(JPEG_EXT), "unsupported extension:", dest);
+    checkArgument(Files.getExtension(dest).equals(EXT_JPEG), "unsupported extension:", dest);
     files.write(toJPEG(img, requiredTypeOrNull), dest);
   }
 
@@ -969,7 +978,7 @@ public final class ImgUtil {
     // A byte-wise hash function of image files is unreliable; e.g. the exact contents
     // differ whether unit tests are run within Eclipse vs the command line (Maven).  
     // So, for image files, we look only at a JSMap of some of the image properties
-    Files.registerFiletypeHashFn(JPEG_EXT, (f) -> toJson(read(f)));
-    Files.registerFiletypeHashFn(PNG_EXT, (f) -> toJson(read(f)));
+    Files.registerFiletypeHashFn(EXT_JPEG, (f) -> toJson(read(f)));
+    Files.registerFiletypeHashFn(EXT_PNG, (f) -> toJson(read(f)));
   }
 }

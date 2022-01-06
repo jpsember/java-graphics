@@ -394,6 +394,6 @@ public final class Plotter extends BaseObject {
   private int mNextImageIndex;
   private Graphics2D mGraphics;
   private BufferedImage mTargetImage;
-  private String mImageExtension = ImgUtil.PNG_EXT;
+  private String mImageExtension = ImgUtil.EXT_PNG;
 
 }

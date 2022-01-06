@@ -187,7 +187,7 @@ public final class ScriptUtil {
   // Project utilities
   // ------------------------------------------------------------------
 
-  private static String[] sFileExtImages = { ImgUtil.JPEG_EXT, "jpeg", ImgUtil.PNG_EXT, ImgUtil.RAX_EXT };
+  private static String[] sFileExtImages = { ImgUtil.EXT_JPEG, "jpeg", ImgUtil.EXT_PNG, ImgUtil.EXT_RAX };
   private static String[] sFileExtAnnotation = { Files.EXT_JSON };
 
   public static List<ScriptFileEntry> buildScriptList(File projectDirectory) {
