@@ -801,6 +801,7 @@ public final class ImgUtil {
   }
 
   public static short[] grayPixels(BufferedImage grayscaleImage) {
+    checkArgument(grayscaleImage.getType() == BufferedImage.TYPE_USHORT_GRAY);
     WritableRaster raster = grayscaleImage.getRaster();
     short[] array = ((DataBufferUShort) raster.getDataBuffer()).getData();
     if (array.length != grayscaleImage.getWidth() * grayscaleImage.getHeight())
