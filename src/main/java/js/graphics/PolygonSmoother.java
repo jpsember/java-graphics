@@ -16,13 +16,24 @@ import java.util.List;
 public final class PolygonSmoother extends BaseObject {
 
   public PolygonSmoother withPolygon(Polygon poly) {
-    for (IPoint v : poly.vertices())
-      addVertex(v.toFPoint());
+    mSourcePolygon = poly;
+    // Discard any previously calculated results
+    mResult = null;
     return this;
   }
 
-  public PolygonSmoother addVertex(FPoint vert) {
-    mOrigVertices.add(vert);
+  public PolygonSmoother withStepSize(float stepSize) {
+    mStepSize = stepSize;
+    return this;
+  }
+
+  public PolygonSmoother withInsetDistance(float distance) {
+    mInsetDistance = distance;
+    return this;
+  }
+
+  public PolygonSmoother withTau(float tau) {
+    mTau = tau;
     return this;
   }
 
@@ -32,20 +43,10 @@ public final class PolygonSmoother extends BaseObject {
     return mResult;
   }
 
-  public PolygonSmoother withStepSize(float stepSize) {
-    mStepSize = stepSize;
-    return this;
-  }
-
-  public PolygonSmoother withTau(float tau) {
-    mTau = tau;
-    return this;
-  }
-
   private void calculateResult() {
-    List<FPoint> src = mOrigVertices;
-    checkState(!src.isEmpty(), "no vertices provided");
-    checkArgument(src.size() >= 3, "insufficient number of vertices");
+    Polygon sourcePolygon = checkNotNull(mSourcePolygon, "no polygon provided");
+    checkArgument(sourcePolygon.isWellDefined(), "ill defined polygon");
+    List<FPoint> src = preprocessVertices(sourcePolygon);
 
     // See: https://www.cs.cmu.edu/~fp/courses/graphics/asst5/catmullRom.pdf
 
@@ -94,8 +95,44 @@ public final class PolygonSmoother extends BaseObject {
     mResult = new Polygon(ivertices);
   }
 
-  private final List<FPoint> mOrigVertices = arrayList();
+  private List<FPoint> preprocessVertices(Polygon p) {
+    todo(
+        "Have option to perform simplification (e.g. to eliminate collinear vertices)?  Or can we just pass in a simplified polygon?");
+    todo("Add support for open polygons");
+
+    List<FPoint> result = arrayList();
+
+    if (mInsetDistance == 0) {
+      for (IPoint v : p.vertices())
+        result.add(v.toFPoint());
+      return result;
+    }
+
+    // If edge length is small, store edge midpoint;
+    // Otherwise, the endpoints inset by a constant amount 
+
+    float insetDist = mInsetDistance;
+    float minSegLength = 3 * insetDist;
+
+    FPoint p0 = p.lastVertex().toFPoint();
+    for (IPoint i1 : p.vertices()) {
+      FPoint p1 = i1.toFPoint();
+      float segLen = MyMath.distanceBetween(p0, p1);
+      if (segLen < minSegLength) {
+        result.add(FPoint.midPoint(p0, p1));
+      } else {
+        float t = insetDist / segLen;
+        result.add(FPoint.interpolate(p0, p1, t));
+        result.add(FPoint.interpolate(p0, p1, 1 - t));
+      }
+      p0 = p1;
+    }
+    return result;
+  }
+
+  private Polygon mSourcePolygon;
   private float mTau = 0.5f;
-  private float mStepSize = 3f;
+  private float mStepSize = 1f;
+  private float mInsetDistance;
   private Polygon mResult;
 }
