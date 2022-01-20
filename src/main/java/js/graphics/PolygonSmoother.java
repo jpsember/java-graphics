@@ -1,7 +1,9 @@
 package js.graphics;
 
 import js.base.BaseObject;
+import js.geometry.FPoint;
 import js.geometry.IPoint;
+import js.geometry.MyMath;
 import js.geometry.Polygon;
 
 import static js.base.Tools.*;
@@ -14,7 +16,13 @@ import java.util.List;
 public final class PolygonSmoother extends BaseObject {
 
   public PolygonSmoother withPolygon(Polygon poly) {
-    mOrigPoly = poly;
+    for (IPoint v : poly.vertices())
+      addVertex(v.toFPoint());
+    return this;
+  }
+
+  public PolygonSmoother addVertex(FPoint vert) {
+    mOrigVertices.add(vert);
     return this;
   }
 
@@ -24,14 +32,24 @@ public final class PolygonSmoother extends BaseObject {
     return mResult;
   }
 
+  public PolygonSmoother withStepSize(float stepSize) {
+    mStepSize = stepSize;
+    return this;
+  }
+
+  public PolygonSmoother withTau(float tau) {
+    mTau = tau;
+    return this;
+  }
+
   private void calculateResult() {
-    Polygon src = mOrigPoly;
-    checkNotNull(src, "no polygon provided");
-    checkArgument(src.numVertices() >= 3, "insufficient number of vertices");
+    List<FPoint> src = mOrigVertices;
+    checkState(!src.isEmpty(), "no vertices provided");
+    checkArgument(src.size() >= 3, "insufficient number of vertices");
 
     // See: https://www.cs.cmu.edu/~fp/courses/graphics/asst5/catmullRom.pdf
 
-    float t = 0.5f;
+    float t = mTau;
 
     // Geometry matrix 
     final float c00 = 0, c01 = 1, c02 = 0, c03 = 0;
@@ -41,17 +59,24 @@ public final class PolygonSmoother extends BaseObject {
 
     List<IPoint> ivertices = arrayList();
 
-    for (int segIndex = 0; segIndex < src.numVertices(); segIndex++) {
+    for (int segIndex = 0; segIndex < src.size(); segIndex++) {
+      FPoint pa = getMod(src, segIndex - 2);
+      FPoint pb = getMod(src, segIndex - 1);
+      FPoint pc = getMod(src, segIndex);
+      FPoint pd = getMod(src, segIndex + 1);
 
-      IPoint pa = src.vertexMod(segIndex - 2);
-      IPoint pb = src.vertexMod(segIndex - 1);
-      IPoint pc = src.vertexMod(segIndex);
-      IPoint pd = src.vertexMod(segIndex + 1);
+      // make the step size approximately constant by looking at the length of the edge.
+      // BUT: is the length of the single segment a good estimate of the length of the curve generated?
 
-      int nsteps = 10;
-      for (int step = 0; step < nsteps; step++) {
+      float estimatedSegmentLength = MyMath.distanceBetween(pb, pc);
+      int stepCount = Math.max(1, Math.round(estimatedSegmentLength / mStepSize));
+      float stepIncrement = 1f / stepCount;
+      float stepAccum = 0;
+
+      for (int stepIndex = 0; stepIndex < stepCount; stepIndex++, stepAccum += stepIncrement) {
+
         float u0 = 1;
-        float u1 = (step / (float) nsteps);
+        float u1 = stepAccum;
         float u2 = u1 * u1;
         float u3 = u2 * u1;
 
@@ -62,13 +87,15 @@ public final class PolygonSmoother extends BaseObject {
 
         float ix = f0 * pa.x + f1 * pb.x + f2 * pc.x + f3 * pd.x;
         float iy = f0 * pa.y + f1 * pb.y + f2 * pc.y + f3 * pd.y;
-        IPoint ipt = new IPoint(ix, iy);
-        ivertices.add(ipt);
+
+        ivertices.add(new IPoint(ix, iy));
       }
     }
-    mResult = src.withVertices(ivertices);
+    mResult = new Polygon(ivertices);
   }
 
-  private Polygon mOrigPoly;
+  private final List<FPoint> mOrigVertices = arrayList();
+  private float mTau = 0.5f;
+  private float mStepSize = 3f;
   private Polygon mResult;
 }
