@@ -22,6 +22,13 @@ import java.util.List;
  * 
  * Does not yet support open polygons.
  * 
+ * There are two variants of the spline: standard, and centripetal.
+ * 
+ * The centripetal variant is more expensive to calculate (though the code could be optimized somewhat).
+ * It might be possible to get sufficiently good results from the standard variant if, for
+ * long polygonal edges, we replace the edge with a set of equivalent collinear edges so as to
+ * make all edges approximately the same length.
+ * 
  * </pre>
  */
 public final class PolygonSmoother extends BaseObject {
