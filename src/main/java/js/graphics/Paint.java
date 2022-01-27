@@ -185,6 +185,10 @@ public class Paint implements AbstractData {
       return color((int) red, (int) green, (int) blue, 255);
     }
 
+    public Builder alpha(float alpha) {
+      return color(mColor.getRed(), mColor.getGreen(), mColor.getBlue(), (int) alpha);
+    }
+
   }
 
 }

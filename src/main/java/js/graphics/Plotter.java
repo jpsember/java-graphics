@@ -199,7 +199,13 @@ public final class Plotter extends BaseObject {
   private void createGraphics() {
     mGraphics = image().createGraphics();
     mGraphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-    mGraphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    withAntiAlias(true);
+  }
+
+  public Plotter withAntiAlias(boolean state) {
+    graphics().setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+        state ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
+    return this;
   }
 
   /**
@@ -218,7 +224,6 @@ public final class Plotter extends BaseObject {
    */
   public Plotter with(BufferedImage sourceImage) {
     assertNoCanvasDefined();
-    checkState(mGraphics == null);
     BufferedImage targetImage = ImgUtil.imageAsType(sourceImage, PREFERRED_IMAGE_TYPE);
     if (targetImage == sourceImage)
       targetImage = ImgUtil.deepCopy(sourceImage);

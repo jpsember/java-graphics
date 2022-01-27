@@ -38,9 +38,11 @@ import js.base.BaseObject;
 import js.data.AbstractData;
 import js.file.Files;
 import js.geometry.IPoint;
+import js.geometry.Polygon;
 import js.json.JSList;
 import js.json.JSMap;
 import js.json.JSObject;
+import js.graphics.gen.ElementProperties;
 import js.graphics.gen.MonoImage;
 
 /**
@@ -100,7 +102,7 @@ public final class Inspector extends BaseObject {
   public Inspector imageSize(IPoint size) {
     if (!used())
       return this;
-    assertNoImageSizeYet();
+    checkState(mImageSize == null, "image size is already defined");
     mImageSize = size;
     return this;
   }
@@ -138,7 +140,7 @@ public final class Inspector extends BaseObject {
     return this;
   }
 
-  private boolean isNull() {
+  public boolean isNull() {
     return this == NULL_INSPECTOR;
   }
 
@@ -185,7 +187,7 @@ public final class Inspector extends BaseObject {
       prefix = nullToEmpty(prefix);
       log("create image, prefix:", quote(prefix));
 
-      flushCurrentItem();
+      flush();
 
       // If there's no active set, or the active set already contains this prefix, start a new one
       if (mActiveSample == null || mPrefixSet.contains(prefix)) {
@@ -256,7 +258,7 @@ public final class Inspector extends BaseObject {
   /**
    * Flush current item (if one exists) to filesystem
    */
-  private void flushCurrentItem() {
+  public void flush() {
     String prefix = mCurrentItemPrefix;
     if (prefix == null)
       return;
@@ -280,10 +282,13 @@ public final class Inspector extends BaseObject {
           log("write image:", imageFile.getName());
           files().write(ImgUtil.compressRAX(mMonoImage), imageFile);
         } else {
-          BufferedImage img = bufferedImage();
           imageFile = Files.setExtension(filename, ImgUtil.EXT_PNG);
-          log("write image:", imageFile.getName());
-          ImgUtil.writeImage(files(), img, imageFile);
+          // There may not be an image, e.g. if just adding script elements
+          BufferedImage img = optBufferedImage();
+          if (img != null) {
+            log("write image:", imageFile.getName());
+            ImgUtil.writeImage(files(), img, imageFile);
+          }
         }
         mActiveSample.addFile(imageFile);
         File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
@@ -294,6 +299,34 @@ public final class Inspector extends BaseObject {
     }
     mCurrentItemPrefix = null;
   }
+
+  // ------------------------------------------------------------------
+  // Defining and working with images
+  // ------------------------------------------------------------------
+
+  public Plotter plotter() {
+    if (mPlotter == null) {
+      assertUsed();
+
+      Plotter p = Plotter.build();
+
+      // If we already have an image, provide it to the plotter
+
+      if (optBufferedImage() != null) {
+        p.into(optBufferedImage());
+      } else {
+        // Have the plotter construct an image for us
+        p.withCanvas(imageSize());
+        mBufferedImage = p.image();
+      }
+      mPlotter = p;
+    }
+    return mPlotter;
+  }
+
+  private Plotter mPlotter;
+
+  // ------------------------------------------------------------------
 
   public Inspector image(float[] image) {
     if (used()) {
@@ -347,11 +380,6 @@ public final class Inspector extends BaseObject {
     return mImageSize;
   }
 
-  private void assertNoImageSizeYet() {
-    if (mImageSize != null)
-      badState("image size is already defined");
-  }
-
   public List<ScriptElement> elements() {
     assertValidInspector();
     return mElements;
@@ -366,16 +394,30 @@ public final class Inspector extends BaseObject {
     return this;
   }
 
+  @Deprecated
+  public Inspector add(Polygon polygon, int category) {
+    if (used()) {
+      mElements.add(new PolygonElement(ElementProperties.newBuilder().category(category), polygon));
+    }
+    return this;
+  }
+
   public BufferedImage bufferedImage() {
+    optBufferedImage();
+    if (mBufferedImage == null)
+      throw badState("no BufferedImage available");
+    return mBufferedImage;
+  }
+
+  private BufferedImage optBufferedImage() {
     assertValidInspector();
     if (mBufferedImage == null) {
       if (mImageFloats != null) {
         // Construct an 8-bit, RGB image from image floats
         mBufferedImage = ImgUtil.floatsToBufferedImage(mImageFloats, imageSize(), mImageChannels);
       }
-      if (mBufferedImage == null)
-        throw badState("no BufferedImage available");
-      mBufferedImage = applyImageEffects(mBufferedImage);
+      if (mBufferedImage != null)
+        mBufferedImage = applyImageEffects(mBufferedImage);
     }
     return mBufferedImage;
   }
