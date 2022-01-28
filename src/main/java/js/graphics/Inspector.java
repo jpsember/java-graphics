@@ -26,6 +26,7 @@ package js.graphics;
 
 import static js.base.Tools.*;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
@@ -327,11 +328,14 @@ public final class Inspector extends BaseObject {
       assertUsed();
       Plotter p = Plotter.build();
       // Provide an image to the plotter.  If none exists, create one
+      boolean createdImage = false;
       if (optBufferedImage() == null) {
         mBufferedImage = ImgUtil.build(imageSize(), Plotter.PREFERRED_IMAGE_TYPE);
-        todo("fill image with gray of some sort");
+        createdImage = true;
       }
       p.into(optBufferedImage());
+      if (createdImage)
+        p.with(Color.lightGray).fillRect(0, 0, mImageSize.x, mImageSize.y);
       mPlotter = p;
     }
     return mPlotter;
