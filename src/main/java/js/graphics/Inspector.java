@@ -121,6 +121,20 @@ public final class Inspector extends BaseObject {
     return this;
   }
 
+  /**
+   * Set a minimum number of samples. Useful e.g. to always generate samples,
+   * for debug purposes.
+   */
+  public Inspector minSamples(int minSamples) {
+    if (!isNull()) {
+      assertNotStarted();
+      mMinSamples = minSamples;
+      if (mMaxSamples < minSamples)
+        maxSamples(minSamples);
+    }
+    return this;
+  }
+
   public Inspector channels(int channels) {
     if (!used())
       return this;
@@ -207,6 +221,7 @@ public final class Inspector extends BaseObject {
       //
       mElements.clear();
       mBufferedImage = null;
+      mPlotter = null;
       mJsonObject = null;
       mMonoImage = null;
       mImageFloats = null;
@@ -221,10 +236,15 @@ public final class Inspector extends BaseObject {
     log("start new ImageSet");
     mPrefixSet.clear();
 
-    int sampleSlot = -1;
-    int rval = random().nextInt(1 + mStartSampleOffset + sampleCount());
-    if (rval < maxSamples())
-      sampleSlot = rval;
+    int sampleSlot;
+    if (mSampleCount < mMinSamples) {
+      sampleSlot = mSampleCount;
+    } else {
+      sampleSlot = -1;
+      int rval = random().nextInt(1 + mStartSampleOffset + sampleCount());
+      if (rval < maxSamples())
+        sampleSlot = rval;
+    }
 
     Sample newSet = new Sample(sampleSlot, mSampleCount);
     mActiveSample = newSet;
@@ -260,9 +280,8 @@ public final class Inspector extends BaseObject {
    */
   public void flush() {
     String prefix = mCurrentItemPrefix;
-    if (prefix == null)
-      return;
-    if (used()) {
+    mCurrentItemPrefix = null;
+    if (prefix != null && used()) {
       String baseName = String.format("%07d", mActiveSample.sampleNumber());
       if (!prefix.isEmpty())
         baseName = baseName + "_" + prefix;
@@ -292,12 +311,11 @@ public final class Inspector extends BaseObject {
         }
         mActiveSample.addFile(imageFile);
         File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
-        ScriptUtil.writeIfUseful(files(), script(), scriptFile);
-        if (scriptFile.exists())
+        if (ScriptUtil.writeIfUseful(files(), script(), scriptFile)) {
           mActiveSample.addFile(scriptFile);
+        }
       }
     }
-    mCurrentItemPrefix = null;
   }
 
   // ------------------------------------------------------------------
@@ -307,25 +325,17 @@ public final class Inspector extends BaseObject {
   public Plotter plotter() {
     if (mPlotter == null) {
       assertUsed();
-
       Plotter p = Plotter.build();
-
-      // If we already have an image, provide it to the plotter
-
-      if (optBufferedImage() != null) {
-        p.into(optBufferedImage());
-      } else {
-        // Have the plotter construct an image for us
-        p.withCanvas(imageSize());
-        mBufferedImage = p.image();
+      // Provide an image to the plotter.  If none exists, create one
+      if (optBufferedImage() == null) {
+        mBufferedImage = ImgUtil.build(imageSize(), Plotter.PREFERRED_IMAGE_TYPE);
+        todo("fill image with gray of some sort");
       }
+      p.into(optBufferedImage());
       mPlotter = p;
     }
     return mPlotter;
   }
-
-  private Plotter mPlotter;
-
   // ------------------------------------------------------------------
 
   public Inspector image(float[] image) {
@@ -569,5 +579,7 @@ public final class Inspector extends BaseObject {
   // If not null, this is the prefix for the active image
   private String mCurrentItemPrefix;
   private int mMaxSamples = 20;
+  private int mMinSamples;
   private boolean mWithBackup;
+  private Plotter mPlotter;
 }

@@ -279,13 +279,15 @@ public final class ScriptUtil {
    * file at that location. A script is useful if it is different than the
    * default instance
    */
-  public static void writeIfUseful(Files fileManager, Script scriptData, File destinationFile) {
+  public static boolean writeIfUseful(Files fileManager, Script scriptData, File destinationFile) {
     Script built = scriptData.build();
-    if (isUseful(built)) {
+    boolean useful = isUseful(built);
+    if (useful) {
       fileManager.write(destinationFile, built);
     } else {
       fileManager.deleteFile(destinationFile);
     }
+    return useful;
   }
 
   public static boolean isUseful(Script script) {

@@ -64,12 +64,6 @@ public final class PolygonSmoother extends BaseObject {
     return this;
   }
 
-  public PolygonSmoother withCentripetalFactor(float factor, int stepCount) {
-    mCentripetalFactor = factor;
-    mCentripetalSteps = stepCount;
-    return this;
-  }
-
   public Polygon result() {
     if (mResult == null)
       calculateResult();
@@ -81,12 +75,7 @@ public final class PolygonSmoother extends BaseObject {
     checkArgument(sourcePolygon.isWellDefined(), "ill defined polygon");
     List<FPoint> src = preprocessVertices(sourcePolygon);
     List<FPoint> target = arrayList();
-
-    if (mCentripetalFactor != 0)
-      centripetalCatmullRom(src, target);
-    else
-      catmullRom(src, target);
-
+    catmullRom(src, target);
     mResult = new Polygon(IPoint.convert(target));
   }
 
@@ -140,73 +129,6 @@ public final class PolygonSmoother extends BaseObject {
     }
   }
 
-  private void centripetalCatmullRom(List<FPoint> src, List<FPoint> target2) {
-    // See: https://en.wikipedia.org/wiki/Centripetal_Catmull%E2%80%93Rom_spline
-
-    for (int segIndex = 0; segIndex < src.size(); segIndex++) {
-      FPoint p0 = getMod(src, segIndex - 2);
-      FPoint p1 = getMod(src, segIndex - 1);
-      FPoint p2 = getMod(src, segIndex);
-      FPoint p3 = getMod(src, segIndex + 1);
-
-      float t0 = 0;
-      float t1 = tj(t0, p0, p1);
-      float t2 = tj(t1, p1, p2);
-      float t3 = tj(t2, p2, p3);
-
-      int stepTotal = mCentripetalSteps;
-      float stepSize = (t2 - t1) / stepTotal;
-      float t = t1 + stepSize / 2;
-
-      for (int stepIndex = 0; stepIndex < stepTotal; stepIndex++, t += stepSize) {
-
-        float a1p0 = (t1 - t) / (t1 - t0);
-        float a1p1 = (t - t0) / (t1 - t0);
-
-        float a2p1 = (t2 - t) / (t2 - t1);
-        float a2p2 = (t - t1) / (t2 - t1);
-
-        float a3p2 = (t3 - t) / (t3 - t2);
-        float a3p3 = (t - t2) / (t3 - t2);
-
-        float b1a1 = (t2 - t) / (t2 - t0);
-        float b1a2 = (t - t0) / (t2 - t0);
-
-        float b2a2 = (t3 - t) / (t3 - t1);
-        float b2a3 = (t - t1) / (t3 - t1);
-
-        float cb1 = (t2 - t) / (t2 - t1);
-        float cb2 = (t - t1) / (t2 - t1);
-
-        float a1x = a1p0 * p0.x + a1p1 * p1.x;
-        float a1y = a1p0 * p0.y + a1p1 * p1.y;
-
-        float a2x = a2p1 * p1.x + a2p2 * p2.x;
-        float a2y = a2p1 * p1.y + a2p2 * p2.y;
-
-        float a3x = a3p2 * p2.x + a3p3 * p3.x;
-        float a3y = a3p2 * p2.y + a3p3 * p3.y;
-
-        float b1x = b1a1 * a1x + b1a2 * a2x;
-        float b1y = b1a1 * a1y + b1a2 * a2y;
-
-        float b2x = b2a2 * a2x + b2a3 * a3x;
-        float b2y = b2a2 * a2y + b2a3 * a3y;
-
-        float cx = cb1 * b1x + cb2 * b2x;
-        float cy = cb1 * b1y + cb2 * b2y;
-
-        target2.add(new FPoint(cx, cy));
-      }
-    }
-  }
-
-  private float tj(float t, FPoint a, FPoint b) {
-    float sqdist = MyMath.squaredDistanceBetween(a, b);
-    float alpha = mCentripetalFactor;
-    return t + (float) Math.pow(sqdist, alpha);
-  }
-
   private List<FPoint> preprocessVertices(Polygon p) {
     List<FPoint> result = arrayList();
 
@@ -242,7 +164,5 @@ public final class PolygonSmoother extends BaseObject {
   private float mTau = 0.5f;
   private float mStepSize = 1f;
   private float mInsetDistance;
-  private float mCentripetalFactor;
-  private int mCentripetalSteps;
   private Polygon mResult;
 }

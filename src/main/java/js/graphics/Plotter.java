@@ -131,6 +131,17 @@ public final class Plotter extends BaseObject {
   }
 
   /**
+   * Modify graphics transformation so effective origin is in the bottom left
+   * 
+   */
+  public Plotter flipVert() {
+    IPoint imageSize = ImgUtil.size(image());
+    Matrix m = Matrix.multiply(Matrix.getScale(1, -1), Matrix.getTranslate(0, -imageSize.y));
+    graphics().transform(m.toAffineTransform());
+    return this;
+  }
+
+  /**
    * Render into a blank canvas with particular positions of sides; determines
    * the transformation matrix
    */
