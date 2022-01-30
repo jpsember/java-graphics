@@ -372,16 +372,14 @@ public final class JImageUtil {
 
   public static BufferedImage toBufferedImage(JImage source) {
     if (source.depth() == 1 && source.wPixels() != null) {
-      BufferedImage bufferedImage = new BufferedImage(source.size().x, source.size().y,
-          BufferedImage.TYPE_USHORT_GRAY);
+      BufferedImage bufferedImage = ImgUtil.build(source.size(), BufferedImage.TYPE_USHORT_GRAY);
       short[] array = ((DataBufferUShort) bufferedImage.getRaster().getDataBuffer()).getData();
       short[] srcPix = source.wPixels();
       checkArgument(srcPix.length == array.length);
       System.arraycopy(srcPix, 0, array, 0, srcPix.length);
       return bufferedImage;
     } else if (source.depth() == 1 && source.bPixels() != null) {
-      BufferedImage bufferedImage = new BufferedImage(source.size().x, source.size().y,
-          BufferedImage.TYPE_BYTE_GRAY);
+      BufferedImage bufferedImage = ImgUtil.build(source.size(), BufferedImage.TYPE_BYTE_GRAY);
       byte[] array = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
       byte[] srcPix = source.bPixels();
       checkArgument(srcPix.length == array.length);

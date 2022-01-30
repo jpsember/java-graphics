@@ -58,7 +58,7 @@ public final class ImgEffects {
    * pixels are not contiguous, i.e., they are a subimage view of a larger image
    */
   public static BufferedImage copy(BufferedImage img) {
-    BufferedImage target = new BufferedImage(img.getWidth(), img.getHeight(), img.getType());
+    BufferedImage target = ImgUtil.build(ImgUtil.size(img), img.getType());
     img.copyData(target.getRaster());
     return target;
   }

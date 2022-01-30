@@ -98,7 +98,8 @@ public final class ImgUtil {
 
   public static BufferedImage read(InputStream inputStream) {
     try {
-      BufferedImage img = ImageIO.read(inputStream);
+      mem().register(inputStream);
+      BufferedImage img = register(ImageIO.read(inputStream));
       inputStream.close();
       return img;
     } catch (IOException e) {
@@ -451,7 +452,7 @@ public final class ImgUtil {
    * Build BufferedImage with particular size and type
    */
   public static BufferedImage build(IPoint size, int bufferedImageType) {
-    return new BufferedImage(size.x, size.y, bufferedImageType);
+    return register(new BufferedImage(size.x, size.y, bufferedImageType));
   }
 
   /**
@@ -517,7 +518,7 @@ public final class ImgUtil {
     ColorModel cm = sourceImage.getColorModel();
     boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
     WritableRaster raster = sourceImage.copyData(sourceImage.getRaster().createCompatibleWritableRaster());
-    return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    return register(new BufferedImage(cm, raster, isAlphaPremultiplied, null));
   }
 
   /**
@@ -970,6 +971,11 @@ public final class ImgUtil {
     g.drawString(message, (size.x - textWidth) / 2, (size.y + fm.getHeight()) / 2);
     g.dispose();
     return img;
+  }
+
+  private static BufferedImage register(BufferedImage image) {
+    mem().register(image);
+    return image;
   }
 
   static {
