@@ -260,7 +260,7 @@ public class JImageUtilTest extends MyTestCase {
 
     File imageFile = Files.setExtension(imageBaseFile, ImgUtil.EXT_JMG);
     if (imageFile.exists()) {
-      output = JImageUtil.decode(Files.toByteArray(imageFile));
+      output = JImageUtil.decode(Files.toByteArray(imageFile,null));
     } else {
       log("read sample image; not found:", imageBaseFile.getName());
 
@@ -275,7 +275,7 @@ public class JImageUtilTest extends MyTestCase {
         JImage.Builder img = JImage.newBuilder()//
             .depth(1);
         img.size(RAW_IMAGE_SIZE_DEFAULT);
-        img.wPixels(DataUtil.bytesToShortsBigEndian(Files.toByteArray(imageSource)));
+        img.wPixels(DataUtil.bytesToShortsBigEndian(Files.toByteArray(imageSource,null)));
         output = img.build();
       } else {
         imageSource = Files.setExtension(imageBaseFile, ImgUtil.EXT_PNG);

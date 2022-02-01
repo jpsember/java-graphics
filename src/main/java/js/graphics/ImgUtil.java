@@ -98,7 +98,6 @@ public final class ImgUtil {
 
   public static BufferedImage read(InputStream inputStream) {
     try {
-      mem().register(inputStream);
       BufferedImage img = register(ImageIO.read(inputStream));
       inputStream.close();
       return img;
@@ -124,7 +123,7 @@ public final class ImgUtil {
    * @return pixels
    */
   public static MonoImage readRax(InputStream inputStream) {
-    byte[] content = Files.toByteArray(inputStream);
+    byte[] content = Files.toByteArray(inputStream, "ImgUtil.readRax");
     return decompressRAX(content, null);
   }
 
