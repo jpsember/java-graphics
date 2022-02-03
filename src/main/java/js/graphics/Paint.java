@@ -53,6 +53,10 @@ public class Paint implements AbstractData {
     return mStrokeWidth;
   }
 
+  public final Font font() {
+    return mFont;
+  }
+
   public final Paint apply(Graphics2D g) {
     if (!isFill()) {
       g.setStroke(new BasicStroke(mStrokeWidth));
