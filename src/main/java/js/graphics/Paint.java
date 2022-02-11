@@ -102,6 +102,11 @@ public class Paint implements AbstractData {
     return new Builder(DEFAULT_INSTANCE);
   }
 
+  @Override
+  public Paint parse(Object object) {
+    throw new UnsupportedOperationException();
+  }
+
   public static final class Builder extends Paint {
 
     public Builder font(Font font, float scaleFactor) {
@@ -175,6 +180,10 @@ public class Paint implements AbstractData {
      */
     public Builder monoFont(float scale) {
       return font(CONSOLE_FONT, scale);
+    }
+
+    public Builder color(int red, int green, int blue) {
+      return color(new Color(red, green, blue));
     }
 
     public Builder color(int red, int green, int blue, int alpha) {
