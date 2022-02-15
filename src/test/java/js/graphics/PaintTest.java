@@ -24,6 +24,7 @@
  **/
 package js.graphics;
 
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
@@ -31,6 +32,7 @@ import org.junit.Test;
 
 import js.base.BasePrinter;
 import js.file.Files;
+import js.json.JSMap;
 import js.testutil.MyTestCase;
 import static js.base.Tools.*;
 
@@ -40,6 +42,15 @@ public class PaintTest extends MyTestCase {
   public String testDataName() {
     loadTools();
     return "img_util_test_data";
+  }
+
+  @Test
+  public void serialization() {
+    JSMap m = map();
+    m.put("default", Paint.DEFAULT_INSTANCE);
+    pt().font(new Font("Courier New", Font.BOLD, 20), 1f);
+    m.put("constructed", pt());
+    assertMessage(m);
   }
 
   @Test

@@ -24,12 +24,16 @@
  **/
 package js.graphics;
 
+import java.awt.Font;
 import java.awt.image.BufferedImage;
 
 import js.base.BasePrinter;
+import js.json.JSMap;
 import js.testutil.MyTestCase;
 
 import org.junit.Test;
+
+import static js.base.Tools.*;
 
 public class ImgUtilTest extends MyTestCase {
 
@@ -57,6 +61,16 @@ public class ImgUtilTest extends MyTestCase {
     assertMessage(BasePrinter.toString(img));
   }
 
+  @Test
+  public void fontSerialization() {
+    JSMap m = ImgUtil.toJson(ImgUtil.FONT_DEFAULT);
+    Font f = ImgUtil.parseFont(m);
+    JSMap m2 = map();
+    m2.put("orig",m);
+    m2.put("parsed",ImgUtil.toJson(f));
+    assertMessage(m2);
+  }
+  
   private BufferedImage readImage(String name) {
     return ImgUtil.read(testFile(name));
   }

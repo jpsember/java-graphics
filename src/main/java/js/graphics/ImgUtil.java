@@ -856,6 +856,37 @@ public final class ImgUtil {
   }
 
   // ------------------------------------------------------------------
+  // Serializing graphical elements to/from JSON
+  // ------------------------------------------------------------------
+
+  public static Font FONT_DEFAULT = new Font("Courier", Font.PLAIN, 16);
+
+  public static Color parseColor(JSList json) {
+    int r = json.getInt(0);
+    int g = json.getInt(1);
+    int b = json.getInt(2);
+    int a = 255;
+    if (json.size() > 3)
+      a = json.get(3);
+    return new Color(r, g, b, a);
+  }
+
+  public static Font parseFont(JSMap json) {
+    String name = json.opt("name", FONT_DEFAULT.getName());
+    int size = json.opt("size", FONT_DEFAULT.getSize());
+    int style = json.opt("style", FONT_DEFAULT.getStyle());
+    return new Font(name, style, size);
+  }
+
+  public static JSMap toJson(Font font) {
+    JSMap m = map();
+    m.put("name", font.getName());
+    m.put("size", font.getSize());
+    m.put("style", font.getStyle());
+    return m;
+  }
+
+  // ------------------------------------------------------------------
   // Logging
   // ------------------------------------------------------------------
 
@@ -945,7 +976,9 @@ public final class ImgUtil {
     m.put("r", color.getRed());
     m.put("g", color.getGreen());
     m.put("b", color.getBlue());
-    m.put("a", color.getAlpha());
+    int alpha = color.getAlpha();
+    if (alpha != 255)
+      m.put("a", alpha);
     return m;
   }
 

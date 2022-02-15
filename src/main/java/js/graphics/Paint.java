@@ -30,6 +30,8 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 
 import js.data.AbstractData;
+import js.json.JSList;
+import js.json.JSMap;
 
 /**
  * Encapsulates rendering properties; implements AbstractData interface (builder
@@ -49,6 +51,23 @@ public class Paint implements AbstractData {
     return new Builder(this);
   }
 
+  @Override
+  public JSMap toJson() {
+    JSMap m = new JSMap();
+    if (mStrokeWidth != 0)
+      m.put("width", mStrokeWidth);
+    if (mColor.getRGB() != DEFAULT_INSTANCE.color().getRGB())
+      m.put("color", ImgUtil.toJson(mColor));
+    todo("should font always be non-null?");
+    if (mFont != null)
+      m.put("font", ImgUtil.toJson(mFont));
+    return m;
+  }
+
+  public Paint parse(Object object) {
+    return new Paint((JSMap) object);
+  }
+
   public final float width() {
     return mStrokeWidth;
   }
@@ -61,8 +80,8 @@ public class Paint implements AbstractData {
     if (!isFill()) {
       g.setStroke(new BasicStroke(mStrokeWidth));
     }
-    if (mColor != null)
-      g.setColor(mColor);
+    g.setColor(mColor);
+    todo("should font always be non-null?");
     if (mFont != null)
       g.setFont(mFont);
     return this;
@@ -80,6 +99,16 @@ public class Paint implements AbstractData {
   }
 
   private Paint() {
+  }
+
+  private Paint(JSMap m) {
+    mStrokeWidth = m.opt("width", DEFAULT_INSTANCE.mStrokeWidth);
+    JSList list = m.optJSList("color");
+    if (list != null)
+      mColor = ImgUtil.parseColor(list);
+    JSMap m2 = m.optJSMap("font");
+    if (m2 != null)
+      mFont = ImgUtil.parseFont(m2);
   }
 
   protected float mStrokeWidth;
@@ -100,11 +129,6 @@ public class Paint implements AbstractData {
 
   public static final Builder newBuilder() {
     return new Builder(DEFAULT_INSTANCE);
-  }
-
-  @Override
-  public Paint parse(Object object) {
-    throw new UnsupportedOperationException();
   }
 
   public static final class Builder extends Paint {

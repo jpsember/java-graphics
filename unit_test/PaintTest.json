@@ -1,5 +1,6 @@
 {        "imageAsType" : 1843,
            "mono16bit" : 3688,
             "plotText" : 7062,
-  "printImageToBuffer" : 4933
+  "printImageToBuffer" : 4933,
+       "serialization" : 8928
 }
