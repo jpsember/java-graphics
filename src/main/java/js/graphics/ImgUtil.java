@@ -861,13 +861,11 @@ public final class ImgUtil {
 
   public static Font FONT_DEFAULT = new Font("Courier", Font.PLAIN, 16);
 
-  public static Color parseColor(JSList json) {
-    int r = json.getInt(0);
-    int g = json.getInt(1);
-    int b = json.getInt(2);
-    int a = 255;
-    if (json.size() > 3)
-      a = json.get(3);
+  public static Color parseColor(JSMap json) {
+    int r = json.getInt("r");
+    int g = json.getInt("g");
+    int b = json.getInt("b");
+    int a = json.opt("a", 255);
     return new Color(r, g, b, a);
   }
 

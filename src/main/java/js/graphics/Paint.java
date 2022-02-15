@@ -30,7 +30,6 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 
 import js.data.AbstractData;
-import js.json.JSList;
 import js.json.JSMap;
 
 import static js.base.Tools.*;
@@ -119,9 +118,9 @@ public class Paint implements AbstractData {
 
   private Paint(JSMap m) {
     mStrokeWidth = m.opt("width", DEFAULT_INSTANCE.mStrokeWidth);
-    JSList list = m.optJSList("color");
-    if (list != null)
-      mColor = ImgUtil.parseColor(list);
+    JSMap map = m.optJSMap("color");
+    if (map != null)
+      mColor = ImgUtil.parseColor(map);
     JSMap m2 = m.optJSMap("font");
     if (m2 != null)
       mFont = ImgUtil.parseFont(m2);
