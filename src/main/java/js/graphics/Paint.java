@@ -33,11 +33,26 @@ import js.data.AbstractData;
 import js.json.JSList;
 import js.json.JSMap;
 
+import static js.base.Tools.*;
+
 /**
  * Encapsulates rendering properties; implements AbstractData interface (builder
  * etc). Doesn't provide 'proper' hashcode/equals
  */
 public class Paint implements AbstractData {
+
+  public static final Font CONSOLE_FONT;
+  public static final Font LABEL_FONT;
+  public static final Font BIG_FONT;
+
+  static {
+    loadTools();
+    Font unscaledFont = new Font("Courier", Font.PLAIN, 16);
+    CONSOLE_FONT = unscaledFont.deriveFont(24);
+    unscaledFont = new Font("Helvetica", Font.PLAIN, 16);
+    LABEL_FONT = unscaledFont.deriveFont(24);
+    BIG_FONT = new Font("Helvetica", Font.BOLD, 24);
+  }
 
   public static final Paint DEFAULT_INSTANCE = new Paint();
 
@@ -58,10 +73,14 @@ public class Paint implements AbstractData {
       m.put("width", mStrokeWidth);
     if (mColor.getRGB() != DEFAULT_INSTANCE.color().getRGB())
       m.put("color", ImgUtil.toJson(mColor));
-    todo("should font always be non-null?");
-    if (mFont != null)
+    if (!ImgUtil.fontsEqual(mFont, DEFAULT_INSTANCE.mFont))
       m.put("font", ImgUtil.toJson(mFont));
     return m;
+  }
+
+  @Override
+  public final String toString() {
+    return toJson().prettyPrint();
   }
 
   public Paint parse(Object object) {
@@ -77,13 +96,10 @@ public class Paint implements AbstractData {
   }
 
   public final Paint apply(Graphics2D g) {
-    if (!isFill()) {
+    if (!isFill())
       g.setStroke(new BasicStroke(mStrokeWidth));
-    }
     g.setColor(mColor);
-    todo("should font always be non-null?");
-    if (mFont != null)
-      g.setFont(mFont);
+    g.setFont(mFont);
     return this;
   }
 
@@ -113,19 +129,7 @@ public class Paint implements AbstractData {
 
   protected float mStrokeWidth;
   protected Color mColor = Color.BLUE;
-  protected Font mFont;
-
-  public static final Font CONSOLE_FONT;
-  public static final Font LABEL_FONT;
-  public static final Font BIG_FONT;
-
-  static {
-    Font unscaledFont = new Font("Courier", Font.PLAIN, 16);
-    CONSOLE_FONT = unscaledFont.deriveFont(24);
-    unscaledFont = new Font("Helvetica", Font.PLAIN, 16);
-    LABEL_FONT = unscaledFont.deriveFont(24);
-    BIG_FONT = new Font("Helvetica", Font.BOLD, 24);
-  }
+  protected Font mFont = CONSOLE_FONT;
 
   public static final Builder newBuilder() {
     return new Builder(DEFAULT_INSTANCE);

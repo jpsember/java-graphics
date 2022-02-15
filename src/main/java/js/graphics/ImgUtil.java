@@ -1019,4 +1019,13 @@ public final class ImgUtil {
     Files.registerFiletypeHashFn(EXT_JPEG, (f) -> toJson(read(f)));
     Files.registerFiletypeHashFn(EXT_PNG, (f) -> toJson(read(f)));
   }
+
+  public static boolean fontsEqual(Font a, Font b) {
+    if (a == b)
+      return true;
+    if (a == null || b == null)
+      return false;
+    return a.getSize() == b.getSize() && a.getStyle() == b.getStyle() && a.getName().equals(b.getName());
+  }
+
 }
