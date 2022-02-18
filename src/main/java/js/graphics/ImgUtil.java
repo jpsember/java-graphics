@@ -85,7 +85,7 @@ public final class ImgUtil {
     // If file is a custom format, treat appropriately
     String ext = Files.getExtension(src);
     if (ext.equals(EXT_RAX)) {
-      MonoImage monoImage = readRax(Files.openInputStream(src));
+      MonoImage monoImage = readRax(src);
       return MonoImageUtil.to16BitGrayscaleBufferedImage(monoImage);
     }
     return read(Files.openInputStream(src));
@@ -116,14 +116,15 @@ public final class ImgUtil {
 
   /**
    * Read .rax from input stream
-   * 
-   * @param dimensions
-   *          this must be an array to hold a single IPoint; the dimensions are
-   *          returned here
-   * @return pixels
    */
+  @Deprecated
   public static MonoImage readRax(InputStream inputStream) {
     byte[] content = Files.toByteArray(inputStream, "ImgUtil.readRax");
+    return decompressRAX(content, null);
+  }
+
+  public static MonoImage readRax(File file) {
+    byte[] content = Files.toByteArray(file, "ImgUtil.readRax");
     return decompressRAX(content, null);
   }
 
