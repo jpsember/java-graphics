@@ -155,7 +155,7 @@ public final class MonoImageUtil {
     int minPixelIndex = -1;
     int maxPixelIndex = -1;
     {
-      int i = -1;
+      int i = INIT_INDEX;
       for (int pix : img.pixels()) {
         pix = unsignedShortToInt(pix);
         i++;
