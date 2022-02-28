@@ -328,6 +328,21 @@ public final class Plotter extends BaseObject {
     return this;
   }
 
+  public IRect bounds() {
+    if (mBounds == null)
+      mBounds = new IRect(ImgUtil.size(mTargetImage));
+    return mBounds;
+  }
+
+  private IRect mBounds;
+
+  /**
+   * Fill rect covering entire image
+   */
+  public Plotter fillRect() {
+    return fillRect(bounds());
+  }
+
   public Plotter fillRect(IRect r) {
     graphics().fillRect(r.x, r.y, r.width, r.height);
     return this;
