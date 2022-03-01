@@ -39,7 +39,6 @@ import java.util.List;
 import js.file.DirWalk;
 import js.file.Files;
 import js.base.BaseObject;
-import js.base.ProblemReporter;
 import js.geometry.FRect;
 import js.geometry.IPoint;
 import js.geometry.IRect;
@@ -194,17 +193,6 @@ public final class Plotter extends BaseObject {
     if (mGraphics == null)
       throw badState("no graphics defined");
     return mGraphics;
-  }
-
-  /**
-   * Override of finalize() method to warn if no call to write() was made
-   */
-  @Override
-  @Deprecated // This method has been deprecated in Java 9, so mark it as such to avoid maven warnings
-  protected void finalize() throws Throwable {
-    if (mGraphics != null)
-      ProblemReporter.sharedReporter(this, "no call made to UtilityPlotter.write()");
-    super.finalize();
   }
 
   private void createGraphics() {
