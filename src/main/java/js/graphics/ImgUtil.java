@@ -551,16 +551,27 @@ public final class ImgUtil {
     BufferedImage image = bufferedImage_INT_RGB;
     assertImageType(image, BufferedImage.TYPE_INT_RGB);
     int[] array = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-    return DataUtil.assertLength(array, image.getWidth() * image.getHeight(),
+    DataUtil.assertLength(array.length, image.getWidth() * image.getHeight(),
         "rgbPixels; did cropping occur?");
+    return array;
+  }
+
+  public static byte[] bgrPixels(BufferedImage bufferedImage_3BYTE_BGR) {
+    BufferedImage image = bufferedImage_3BYTE_BGR;
+    assertImageType(image, BufferedImage.TYPE_3BYTE_BGR);
+    byte[] array = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+    DataUtil.assertLength(array.length, 3 * image.getWidth() * image.getHeight(),
+        "3BYTE_BGR pixels; did cropping occur?");
+    return array;
   }
 
   public static int[] argbPixels(BufferedImage bufferedImage_INT_ARGB) {
     BufferedImage image = bufferedImage_INT_ARGB;
     assertImageType(image, BufferedImage.TYPE_INT_ARGB);
     int[] array = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-    return DataUtil.assertLength(array, image.getWidth() * image.getHeight(),
+    DataUtil.assertLength(array.length, image.getWidth() * image.getHeight(),
         "argbPixels; did cropping occur?");
+    return array;
   }
 
   /**
@@ -599,9 +610,34 @@ public final class ImgUtil {
       }
     }
       break;
+
+    case BufferedImage.TYPE_3BYTE_BGR: {
+      byte[] sourcePixels = ImgUtil.bgrPixels(sourceImage);
+      result = DataUtil.floatArray(sourcePixels.length * numChannels, destinationOrNull);
+      if (numChannels == 1) {
+        int len = sourcePixels.length;
+        int i = 0;
+        for (int j = 0; j < len; j+=3) {
+          result[i] = bytePixelValueToFloat(sourcePixels[j + 1]);
+          i++;
+        }
+      } else {
+        int len = sourcePixels.length;
+        for (int j = 0; j < len; j+=3) {
+          result[j] = bytePixelValueToFloat(sourcePixels[j + 2]);
+          result[j + 1] = bytePixelValueToFloat(sourcePixels[j + 1]);
+          result[j + 2] = bytePixelValueToFloat(sourcePixels[j + 0]);
+        }
+      }
+    }
+      break;
     }
 
     return result;
+  }
+
+  private static float bytePixelValueToFloat(byte b) {
+    return (((int) b) & 0xff) * RGB_TO_FLOAT;
   }
 
   // ------------------------------------------------------------------
