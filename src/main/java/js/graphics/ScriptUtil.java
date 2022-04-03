@@ -36,6 +36,7 @@ import js.geometry.Matrix;
 import js.geometry.MyMath;
 import js.geometry.Polygon;
 import js.graphics.gen.Script;
+import js.graphics.gen.ScriptElementList;
 import js.graphics.gen.ScriptFileEntry;
 import js.json.JSMap;
 import js.graphics.ImgUtil;
@@ -367,6 +368,12 @@ public final class ScriptUtil {
     }
     if (rect != 0 && poly != 0)
       throw badArg("Attempt to mix rectangles and polygons");
+  }
+
+  public static ScriptElementList extractScriptElementList(Script script) {
+    ScriptElementList.Builder b = ScriptElementList.newBuilder();
+    b.elements(script.items());
+    return b.build();
   }
 
 }
