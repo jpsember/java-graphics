@@ -581,6 +581,8 @@ public final class ImgUtil {
    */
   public static float[] floatPixels(BufferedImage sourceImage, int numChannels, float[] destinationOrNull) {
 
+    int pixCount = ImgUtil.size(sourceImage).product();
+
     float[] result;
     switch (sourceImage.getType()) {
 
@@ -589,7 +591,7 @@ public final class ImgUtil {
 
     case BufferedImage.TYPE_INT_RGB: {
       int[] sourcePixels = ImgUtil.rgbPixels(sourceImage);
-      result = DataUtil.floatArray(sourcePixels.length * numChannels, destinationOrNull);
+      result = DataUtil.floatArray(pixCount * numChannels, destinationOrNull);
       if (numChannels == 1) {
         int j = 0;
         for (int pixel : sourcePixels) {
@@ -613,17 +615,18 @@ public final class ImgUtil {
 
     case BufferedImage.TYPE_3BYTE_BGR: {
       byte[] sourcePixels = ImgUtil.bgrPixels(sourceImage);
-      result = DataUtil.floatArray(sourcePixels.length * numChannels, destinationOrNull);
+      result = DataUtil.floatArray(pixCount * numChannels, destinationOrNull);
       if (numChannels == 1) {
         int len = sourcePixels.length;
         int i = 0;
-        for (int j = 0; j < len; j+=3) {
-          result[i] = bytePixelValueToFloat(sourcePixels[j + 1]);
+        for (int j = 0; j < len; j += 3) {
+          float f = bytePixelValueToFloat(sourcePixels[j + 1]);
+          result[i] = f;
           i++;
         }
       } else {
         int len = sourcePixels.length;
-        for (int j = 0; j < len; j+=3) {
+        for (int j = 0; j < len; j += 3) {
           result[j] = bytePixelValueToFloat(sourcePixels[j + 2]);
           result[j + 1] = bytePixelValueToFloat(sourcePixels[j + 1]);
           result[j + 2] = bytePixelValueToFloat(sourcePixels[j + 0]);
