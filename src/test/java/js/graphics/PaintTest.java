@@ -72,7 +72,7 @@ public class PaintTest extends MyTestCase {
   public void imageAsType() {
     BufferedImage img = readImage("batman.png");
     img = ImgUtil.imageAsType(img, BufferedImage.TYPE_INT_ARGB);
-    assertMessage(ImgUtil.toJson(img)+"!");
+    assertMessage(ImgUtil.toJson(img));
   }
 
   @Test
