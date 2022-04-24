@@ -39,7 +39,6 @@ import js.graphics.gen.Script;
 import js.graphics.gen.ScriptElementList;
 import js.graphics.gen.ScriptFileEntry;
 import js.json.JSMap;
-import js.graphics.ImgUtil;
 
 import static js.base.Tools.*;
 
@@ -136,7 +135,6 @@ public final class ScriptUtil {
     return result;
   }
 
-  @SuppressWarnings("unchecked")
   public static <T extends ScriptElement> List<T> elements(List<ScriptElement> elements, T elementType) {
     List<T> result = arrayList();
     for (ScriptElement elem : elements) {

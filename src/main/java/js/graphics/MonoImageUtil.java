@@ -13,7 +13,6 @@ import js.data.DataUtil;
 import js.geometry.IPoint;
 import js.geometry.IRect;
 import js.geometry.MyMath;
-import js.graphics.ImgUtil;
 import js.graphics.gen.ImageStats;
 import js.graphics.gen.MonoImage;
 import js.json.JSList;

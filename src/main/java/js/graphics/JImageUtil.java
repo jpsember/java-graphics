@@ -27,7 +27,6 @@ package js.graphics;
 import js.geometry.IPoint;
 import js.graphics.gen.CompressParam;
 import js.graphics.gen.JImage;
-import js.graphics.ImgUtil;
 
 import static js.base.Tools.*;
 

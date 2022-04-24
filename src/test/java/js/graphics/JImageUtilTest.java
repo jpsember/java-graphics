@@ -37,12 +37,10 @@ import js.data.DataUtil;
 import js.data.ShortArray;
 import js.file.Files;
 import js.geometry.IPoint;
-import js.graphics.JImageUtil;
 import js.graphics.gen.CompressParam;
 import js.graphics.gen.JImage;
 import js.testutil.MyTestCase;
 import static js.base.Tools.*;
-import js.graphics.ImgUtil;
 
 public class JImageUtilTest extends MyTestCase {
 
