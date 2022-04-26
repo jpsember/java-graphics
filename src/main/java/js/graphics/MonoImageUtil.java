@@ -202,14 +202,22 @@ public final class MonoImageUtil {
       b.cdf(cdf);
 
       b.range(b.max() + 1 - b.min());
-      b.median(cdf[50]);
+      b.median(readCDFValue(b, 50));
 
       final int CLIP_PCT = 2;
-      int minClipped = cdf[CLIP_PCT];
-      int maxClipped = cdf[100 - 1 - CLIP_PCT];
-
-      b.clippedRange(unsignedShortToInt(maxClipped + 1 - minClipped));
+      int minClipped = readCDFValue(b, CLIP_PCT);
+      int maxClipped = readCDFValue(b, 100 - 1 - CLIP_PCT);
+      b.clippedRange(maxClipped + 1 - minClipped);
     }
+  }
+
+  /**
+   * Utility method to read a cdf value form the stats and return as an integer.
+   * I was getting a lot of errors because of not always correctly converting
+   * the cdf values (which are stored as shorts) to integers
+   */
+  public static int readCDFValue(ImageStats stats, int index) {
+    return unsignedShortToInt(stats.cdf()[index]);
   }
 
   /**
@@ -307,8 +315,7 @@ public final class MonoImageUtil {
     float scale = maxRowWidth / (float) (stats.max() - stats.min());
 
     for (int pct = 0; pct < 100; pct++) {
-      int pixelValue = cdf[pct];
-
+      int pixelValue = unsignedShortToInt(cdf[pct]);
       String key = String.format("%3d %5d", pct, pixelValue);
       int val = Math.round((pixelValue - stats.min()) * scale);
       m.put(key, bar.substring(0, val));
