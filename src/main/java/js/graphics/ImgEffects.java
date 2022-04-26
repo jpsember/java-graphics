@@ -88,6 +88,22 @@ public final class ImgEffects {
     return applyTransform(img, atx);
   }
 
+  public static BufferedImage makeMonochrome(BufferedImage image) {
+    BufferedImage result = ImgUtil.imageOfSameSize(image);
+    byte[] bgrIn = ImgUtil.bgrPixels(image);
+    byte[] bgrOut = ImgUtil.bgrPixels(result);
+    for (int i = 0; i < bgrIn.length; i += 3) {
+      float c0 = ((int) (bgrIn[i + 0] & 0xff)) * 0.114f;
+      float c1 = ((int) (bgrIn[i + 1] & 0xff)) * 0.587f;
+      float c2 = ((int) (bgrIn[i + 2] & 0xff)) * 0.299f;
+      int gray = (int) (c0 + c1 + c2);
+      if (gray > 255)
+        gray = 255;
+      bgrOut[i + 0] = bgrOut[i + 1] = bgrOut[i + 2] = (byte) gray;
+    }
+    return result;
+  }
+
   private static final Kernel sSharpenKernel = new Kernel(3, 3,
       new float[] { -1, -1, -1, -1, 9, -1, -1, -1, -1 });
   private static final Kernel sBlurKernel = new Kernel(3, 3,

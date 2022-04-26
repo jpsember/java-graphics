@@ -10,6 +10,7 @@ import java.util.Map;
 
 import js.base.Pair;
 import js.data.DataUtil;
+import js.data.IntArray;
 import js.geometry.IPoint;
 import js.geometry.IRect;
 import js.geometry.MyMath;
@@ -517,6 +518,115 @@ public final class MonoImageUtil {
         .build();
     Arrays.fill(image.pixels(), (short) value);
     return image;
+  }
+
+  /**
+   * Perform an erosion of a monochrome image. For each pixel that is zero, its
+   * north/south/east/west neighbors are set to zero as well. Repeated calls
+   * will erode the image further.
+   * 
+   * Pixels on the image boundary will not be affected
+   * 
+   * @param frontierStack
+   *          array containing pixels eroded in previous pass, or null if this
+   *          is the first pass
+   * @param pixels
+   *          monochrome pixels
+   * @param size
+   *          dimensions of image
+   * @return frontierStack for next pass
+   */
+  public static IntArray.Builder erodeMonochromeImage(IntArray.Builder frontierStack, short[] pixels,
+      IPoint size) {
+
+    final short ERODE_VALUE = 0;
+
+    checkArgument(pixels.length == size.product(), "unexpected pixel count");
+    final int sizeX = size.x;
+    final int sizeY = size.y;
+
+    if (frontierStack == null) {
+      // Construct a stack of transparent pixels adjacent to non-transparent ones
+
+      frontierStack = IntArray.newBuilder();
+      int i = 0;
+      for (int y = 0; y < size.y; y++) {
+        for (int x = 0; x < size.x; x++, i++) {
+          if (pixels[i] != ERODE_VALUE)
+            continue;
+          if ((x > 0 && pixels[i - 1] != ERODE_VALUE) //
+              || (x < sizeX - 1 && pixels[i + 1] != ERODE_VALUE) //
+              || (y > 0 && pixels[i - sizeX] != ERODE_VALUE) //
+              || (y < sizeY - 1 && pixels[i + sizeX] != ERODE_VALUE) //
+          ) {
+            frontierStack.add(i);
+          }
+        }
+      }
+      //
+      //      int i0 = (1) + (1 * size.x);
+      //      int trimmedWidth = rowSize - 2;
+      //      int trimmedHeight = size.y - 2;
+      //      for (int rowCount = trimmedHeight; rowCount > 0; rowCount--, i0 += rowSize) {
+      //        int i = i0;
+      //        for (int colCount = trimmedWidth; colCount > 0; colCount--, i++) {
+      //          if (pixels[i] != ERODE_VALUE)
+      //            continue;
+      //          if (pixels[i - 1] != ERODE_VALUE || pixels[i + 1] != ERODE_VALUE
+      //              || pixels[i - rowSize] != ERODE_VALUE || pixels[i + rowSize] != ERODE_VALUE) {
+      //            frontierStack.add(i);
+      //          }
+      //        }
+      //      }
+    }
+
+    //    IntArray.Builder auxStack = IntArray.newBuilder();
+    //
+    //    // Filter out any pixels lying on the image boundary
+    //    //
+    //    for (int i : frontierStack.array()) {
+    //      int y = i / rowSize;
+    //      if (y == 0 || y == size.y - 1)
+    //        continue;
+    //      int x = i % rowSize;
+    //      if (x == 0 || x == rowSize - 1)
+    //        continue;
+    //      auxStack.add(i);
+    //    }
+    //    int[] frontierPix = auxStack.array();
+
+    int[] frontierPix = frontierStack.array();
+
+    frontierStack = IntArray.newBuilder();
+    for (int i : frontierPix)
+      pixels[i] = ERODE_VALUE;
+
+    for (int i : frontierPix) {
+      int x = i % sizeX;
+      int y = i / sizeX;
+      if (x > 0) {
+        int m = i - 1;
+        if (pixels[m] != ERODE_VALUE)
+          frontierStack.add(m);
+      }
+      if (x < sizeX - 1) {
+        int m = i + 1;
+        if (pixels[m] != ERODE_VALUE)
+          frontierStack.add(m);
+      }
+      if (y > 0) {
+        int m = i - sizeX;
+        if (pixels[m] != ERODE_VALUE)
+          frontierStack.add(m);
+      }
+      if (y < sizeY - 1) {
+        int m = i + sizeX;
+        if (pixels[m] != ERODE_VALUE)
+          frontierStack.add(m);
+      }
+    }
+
+    return frontierStack;
   }
 
 }
