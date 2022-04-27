@@ -394,6 +394,19 @@ public final class MonoImageUtil {
   }
 
   /**
+   * Construct grayscale BufferedImage from MonoImage, extending range from 15
+   * bits to 16
+   */
+  public static BufferedImage to16BitGrayscaleBufferedImageFrom15Bit(MonoImage monoImage) {
+    BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
+    short[] srcPixels = monoImage.pixels();
+    short[] destPixels = ImgUtil.grayPixels(bufferedImage);
+    for (int i = 0; i < destPixels.length; i++)
+      destPixels[i] = (short) (srcPixels[i] << 1);
+    return bufferedImage;
+  }
+
+  /**
    * Construct 8-bit RGB BufferedImage from MonoImage
    */
   public static BufferedImage to8BitRGBBufferedImage(MonoImage rawImage) {
