@@ -13,7 +13,6 @@ import js.data.DataUtil;
 import js.data.IntArray;
 import js.geometry.IPoint;
 import js.geometry.IRect;
-import js.geometry.MyMath;
 import js.graphics.gen.ImageStats;
 import js.graphics.gen.MonoImage;
 import js.json.JSList;
@@ -410,26 +409,54 @@ public final class MonoImageUtil {
     return bufferedImage;
   }
 
+  public static float[] calculateNormalizationTranslateAndScale(int minOrigPixelValue,
+      int maxOrigPixelValue) {
+    float translate = 0;
+    float scale = 0;
+    if (minOrigPixelValue < maxOrigPixelValue) {
+      scale = ((float) MonoImageUtil.MAX_PIXEL_VALUE) / (maxOrigPixelValue - minOrigPixelValue);
+      translate = -minOrigPixelValue;
+    }
+    float[] out = new float[2];
+    out[0] = translate;
+    out[1] = scale;
+    return out;
+  }
+
   /**
    * Apply linear normalization to image, by translating pixels then scaling
    */
+  @Deprecated // Specify omitZeroPixels
   public static MonoImage normalize(MonoImage image, float translate, float scale) {
     return normalizeToDepth(image, translate, scale, 15);
+  }
+
+  @Deprecated // Specify omitZeroPixels
+  public static MonoImage normalizeToDepth(MonoImage image, float translate, float scale, int depth) {
+    return normalizeToDepth(image, translate, scale, depth, false);
   }
 
   /**
    * Apply linear normalization to image, translating pixels then scaling, and
    * clamping to a particular depth
    */
-  public static MonoImage normalizeToDepth(MonoImage image, float translate, float scale, int depth) {
+  public static MonoImage normalizeToDepth(MonoImage image, float translate, float scale, int depth,
+      boolean omitZeroPixels) {
     short[] inPix = image.pixels();
     short maxPixelValue = (short) ((1 << depth) - 1);
     short[] outPix = new short[inPix.length];
     int j = 0;
     for (short inPixel : inPix) {
-      int p = (int) ((inPixel + translate) * scale);
-      p = MyMath.clamp(p, 0, maxPixelValue);
-      outPix[j++] = (short) p;
+      short outPixVal = inPixel;
+      if (!omitZeroPixels || inPixel != 0) {
+        int p = (int) ((inPixel + translate) * scale);
+        if (p < 0)
+          p = 0;
+        else if (p > maxPixelValue)
+          p = maxPixelValue;
+        outPixVal = (short) p;
+      }
+      outPix[j++] = outPixVal;
     }
     return image.build().toBuilder().pixels(outPix).build();
   }

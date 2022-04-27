@@ -850,7 +850,7 @@ public final class ImgUtil {
   }
 
   public static short[] grayPixels(BufferedImage grayscaleImage) {
-    checkArgument(grayscaleImage.getType() == BufferedImage.TYPE_USHORT_GRAY);
+    assertImageType(grayscaleImage, BufferedImage.TYPE_USHORT_GRAY);
     WritableRaster raster = grayscaleImage.getRaster();
     short[] array = ((DataBufferUShort) raster.getDataBuffer()).getData();
     if (array.length != grayscaleImage.getWidth() * grayscaleImage.getHeight())
@@ -1064,6 +1064,16 @@ public final class ImgUtil {
     if (a == null || b == null)
       return false;
     return a.getSize() == b.getSize() && a.getStyle() == b.getStyle() && a.getName().equals(b.getName());
+  }
+
+  public static BufferedImage devSave(BufferedImage img, String suffix) {
+    String name = "_dev_" + suffix;
+    if (Files.getExtension(name).isEmpty())
+      name = Files.setExtension(name, EXT_JPEG);
+    File path = Files.getDesktopFile(name);
+    pr("...saving image to desktop:", path.getName());
+    writeImage(Files.S, img, path);
+    return img;
   }
 
 }

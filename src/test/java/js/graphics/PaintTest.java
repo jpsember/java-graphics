@@ -83,7 +83,7 @@ public class PaintTest extends MyTestCase {
 
   private void assertImage() {
     if (verbose())
-      ImgUtil.writeImage(Files.S, img(), Files.getDesktopFile("_test_result_" + name() + ".png"));
+      ImgUtil.devSave(img(), "_test_result_" + name() + ".png");
     ImgUtil.writeImage(Files.S, img(), generatedFile("output.png"));
     assertGenerated();
   }
