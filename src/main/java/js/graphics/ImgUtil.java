@@ -86,7 +86,7 @@ public final class ImgUtil {
     String ext = Files.getExtension(src);
     if (ext.equals(EXT_RAX)) {
       MonoImage monoImage = readRax(src);
-      return MonoImageUtil.to16BitGrayscaleBufferedImage(monoImage);
+      return MonoImageUtil.to15BitBufferedImage(monoImage);
     }
     return read(Files.openInputStream(src));
   }
@@ -394,6 +394,11 @@ public final class ImgUtil {
     files.write(toJPEG(img, requiredTypeOrNull), dest);
   }
 
+  public static void writeRAX(Files files, MonoImage img, File dest) {
+    checkArgumentsEqual(Files.getExtension(dest), ImgUtil.EXT_RAX);
+    Files.S.write(ImgUtil.compressRAX(img), dest);
+  }
+
   // ------------------------------------------------------------------
   // Image attributes
   // ------------------------------------------------------------------
@@ -466,11 +471,6 @@ public final class ImgUtil {
    * Build BufferedImage.TYPE_USHORT_GRAY (16-bit monochrome pixels)
    */
   public static BufferedImage build16BitGrayscaleImage(IPoint size) {
-    return build(size, BufferedImage.TYPE_USHORT_GRAY);
-  }
-
-  @Deprecated // Use build16BitGrayscaleImage
-  public static BufferedImage buildGrayscaleImage(IPoint size) {
     return build(size, BufferedImage.TYPE_USHORT_GRAY);
   }
 
@@ -842,8 +842,9 @@ public final class ImgUtil {
   /**
    * Construct grayscale BufferedImage from monochrome pixels
    */
+  @Deprecated // specify whether to extend to 16 bits from 15 bits
   public static BufferedImage to16BitGrayscaleBufferedImage(IPoint imageSize, short[] monoPixels) {
-    BufferedImage bufferedImage = buildGrayscaleImage(imageSize);
+    BufferedImage bufferedImage = build16BitGrayscaleImage(imageSize);
     short[] destPixels = grayPixels(bufferedImage);
     System.arraycopy(monoPixels, 0, destPixels, 0, monoPixels.length);
     return bufferedImage;

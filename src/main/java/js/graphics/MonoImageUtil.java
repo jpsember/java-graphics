@@ -56,16 +56,6 @@ public final class MonoImageUtil {
     return construct(ImgUtil.size(bufferedImage), ImgUtil.grayPixels(bufferedImage));
   }
 
-  /**
-   * Construct a grayscale BufferedImage from a MonoImage
-   */
-  public static BufferedImage toBufferedImage(MonoImage image) {
-    BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(image.size());
-    short[] destPixels = ImgUtil.grayPixels(bufferedImage);
-    System.arraycopy(image.pixels(), 0, destPixels, 0, destPixels.length);
-    return bufferedImage;
-  }
-
   private static int unsignedShortToInt(int pixel) {
     return pixel & 0xffff;
   }
@@ -384,9 +374,29 @@ public final class MonoImageUtil {
   }
 
   /**
-   * Construct grayscale BufferedImage from MonoImage
+   * Construct grayscale BufferedImage from MonoImage, scaling the 15-bit pixels
+   * to 16 bits
    */
-  public static BufferedImage to16BitGrayscaleBufferedImage(MonoImage monoImage) {
+  public static BufferedImage to16BitBufferedImage(MonoImage monoImage) {
+    BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
+    short[] srcPixels = monoImage.pixels();
+    short[] destPixels = ImgUtil.grayPixels(bufferedImage);
+    short pixelBits = 0;
+    for (int i = 0; i < destPixels.length; i++) {
+      short sourcePixel = srcPixels[i];
+      pixelBits |= sourcePixel;
+      destPixels[i] = (short) (sourcePixel << 1);
+    }
+    if ((pixelBits & 0x8000) != 0)
+      throw badArg("MonoImage had out-of-range pixels");
+    return bufferedImage;
+  }
+
+  /**
+   * Construct grayscale BufferedImage from MonoImage, copying the 15-bit pixels
+   * without change
+   */
+  public static BufferedImage to15BitBufferedImage(MonoImage monoImage) {
     BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
     short[] destPixels = ImgUtil.grayPixels(bufferedImage);
     System.arraycopy(monoImage.pixels(), 0, destPixels, 0, monoImage.pixels().length);
@@ -394,16 +404,12 @@ public final class MonoImageUtil {
   }
 
   /**
-   * Construct grayscale BufferedImage from MonoImage, extending range from 15
-   * bits to 16
+   * Convert a BufferedImage that has a 15-bit range (i.e. derived from a
+   * MonoImage) to one that has a 16-bit range
    */
-  public static BufferedImage to16BitGrayscaleBufferedImageFrom15Bit(MonoImage monoImage) {
-    BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
-    short[] srcPixels = monoImage.pixels();
-    short[] destPixels = ImgUtil.grayPixels(bufferedImage);
-    for (int i = 0; i < destPixels.length; i++)
-      destPixels[i] = (short) (srcPixels[i] << 1);
-    return bufferedImage;
+  public static BufferedImage convert15to16Bit(BufferedImage bufferedImage) {
+    MonoImage monoImage = construct(bufferedImage);
+    return to16BitBufferedImage(monoImage);
   }
 
   /**
@@ -413,12 +419,18 @@ public final class MonoImageUtil {
     BufferedImage bufferedImage = ImgUtil.buildRGBImage(rawImage.size());
     int[] destPixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
     short[] sourcePixels = rawImage.pixels();
+
+    short pixelBits = 0;
     for (int i = 0; i < sourcePixels.length; i++) {
       short source = sourcePixels[i];
-      // We are converting a 16-bit (signed) pixel to an 8-bit (unsigned) one
+      pixelBits |= source;
+      // We are converting a 15-bit pixel to an 8-bit one
       int gray = source >> 7;
       destPixels[i] = gray | (gray << 8) | (gray << 16);
     }
+
+    if ((pixelBits & 0x8000) != 0)
+      throw badArg("Source MonoImage has out of range pixels");
     return bufferedImage;
   }
 
@@ -434,19 +446,6 @@ public final class MonoImageUtil {
     out[0] = translate;
     out[1] = scale;
     return out;
-  }
-
-  /**
-   * Apply linear normalization to image, by translating pixels then scaling
-   */
-  @Deprecated // Specify omitZeroPixels
-  public static MonoImage normalize(MonoImage image, float translate, float scale) {
-    return normalizeToDepth(image, translate, scale, 15);
-  }
-
-  @Deprecated // Specify omitZeroPixels
-  public static MonoImage normalizeToDepth(MonoImage image, float translate, float scale, int depth) {
-    return normalizeToDepth(image, translate, scale, depth, false);
   }
 
   /**
@@ -494,7 +493,7 @@ public final class MonoImageUtil {
     float scale = ((float) MAX_PIXEL_VALUE) / (highCutoffValue - lowCutoffValue);
     float translate = -lowCutoffValue;
 
-    return MonoImageUtil.normalize(monoImage, translate, scale);
+    return MonoImageUtil.normalizeToDepth(monoImage, translate, scale, 15, false);
   }
 
   /**
