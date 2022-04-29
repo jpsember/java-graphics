@@ -343,7 +343,7 @@ public final class MonoImageUtil {
 
   public static MonoImage constructClipped(MonoImage srcImage, IRect bounds) {
     IRect source = new IRect(srcImage.size());
-    checkArgument(source.contains(bounds));
+    checkArgument(source.contains(bounds), "source image doesn't contain desired clip region");
     MonoImage destImage = MonoImageUtil.construct(bounds.size());
     copyPortion(srcImage, destImage, bounds, IPoint.ZERO);
     return destImage;
