@@ -88,7 +88,7 @@ public final class ImgEffects {
     return applyTransform(img, atx);
   }
 
-  public static BufferedImage makeMonochrome(BufferedImage image) {
+  public static BufferedImage makeMonochrome3Channel(BufferedImage image) {
     BufferedImage result = ImgUtil.imageOfSameSize(image);
     byte[] bgrIn = ImgUtil.bgrPixels(image);
     byte[] bgrOut = ImgUtil.bgrPixels(result);
@@ -100,6 +100,28 @@ public final class ImgEffects {
       if (gray > 255)
         gray = 255;
       bgrOut[i + 0] = bgrOut[i + 1] = bgrOut[i + 2] = (byte) gray;
+    }
+    return result;
+  }
+
+  @Deprecated // Use makeMonochrome3/1Channel
+  public static BufferedImage makeMonochrome(BufferedImage image) {
+    return makeMonochrome3Channel(image);
+  }
+
+  public static BufferedImage makeMonochrome1Channel(BufferedImage image) {
+    BufferedImage result = ImgUtil.build(ImgUtil.size(image), BufferedImage.TYPE_BYTE_GRAY);
+    byte[] bgrIn = ImgUtil.bgrPixels(image);
+    byte[] grayOut = ImgUtil.gray8Pixels(result);
+    int j = 0;
+    for (int i = 0; i < bgrIn.length; i += 3) {
+      float c0 = ((int) (bgrIn[i + 0] & 0xff)) * 0.114f;
+      float c1 = ((int) (bgrIn[i + 1] & 0xff)) * 0.587f;
+      float c2 = ((int) (bgrIn[i + 2] & 0xff)) * 0.299f;
+      int gray = (int) (c0 + c1 + c2);
+      if (gray > 255)
+        gray = 255;
+      grayOut[j++] = (byte) gray;
     }
     return result;
   }

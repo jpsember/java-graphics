@@ -413,6 +413,22 @@ public final class MonoImageUtil {
   }
 
   /**
+   * Convert an 8-bit monochromatic BufferedImage to a 15-bit MonoImage
+   */
+  public static MonoImage convert8BitBufferedImageMonoImage(BufferedImage gray8Image) {
+    ImgUtil.assertImageType(gray8Image, BufferedImage.TYPE_BYTE_GRAY);
+    byte[] grayPixels = ImgUtil.gray8Pixels(gray8Image);
+    short[] gray15Pixels = new short[grayPixels.length];
+    int i = INIT_INDEX;
+    for (byte srcPixel : grayPixels) {
+      i++;
+      int sourceInt = ((int) srcPixel) & 0xff;
+      gray15Pixels[i] = (short) (sourceInt << (15 - 8));
+    }
+    return construct(ImgUtil.size(gray8Image), gray15Pixels);
+  }
+
+  /**
    * Construct 8-bit RGB BufferedImage from MonoImage
    */
   public static BufferedImage to8BitRGBBufferedImage(MonoImage rawImage) {
