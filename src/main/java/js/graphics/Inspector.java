@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import js.graphics.gen.Script;
-
+import js.graphics.gen.ScriptElementList;
 import js.base.BaseObject;
 import js.data.AbstractData;
 import js.file.Files;
@@ -406,6 +406,10 @@ public final class Inspector extends BaseObject {
         mElements.add(e);
     }
     return this;
+  }
+
+  public Inspector elements(ScriptElementList scriptElementList) {
+    return elements(scriptElementList.elements());
   }
 
   @Deprecated

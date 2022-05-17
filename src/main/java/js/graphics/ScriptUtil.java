@@ -244,6 +244,10 @@ public final class ScriptUtil {
     return result;
   }
 
+  public static ScriptElementList transform(ScriptElementList elements, Matrix transform) {
+    return ScriptElementList.newBuilder().elements(transform(elements.elements(), transform)).build();
+  }
+
   /**
    * Construct a list of polygons representing BoxElements rotated according to
    * their rotation parameter
