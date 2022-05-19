@@ -35,6 +35,7 @@ import js.geometry.IRect;
 import js.geometry.Matrix;
 import js.geometry.MyMath;
 import js.geometry.Polygon;
+import js.graphics.gen.ElementProperties;
 import js.graphics.gen.Script;
 import js.graphics.gen.ScriptElementList;
 import js.graphics.gen.ScriptFileEntry;
@@ -303,6 +304,15 @@ public final class ScriptUtil {
   private static int category(ScriptElement element) {
     Integer val = element.properties().category();
     return (val == null) ? -1 : val.intValue();
+  }
+
+  private static ElementProperties.Builder toBuilder(ElementProperties propertiesOrNull) {
+    ElementProperties prop = nullTo(propertiesOrNull, ElementProperties.DEFAULT_INSTANCE);
+    return prop.toBuilder();
+  }
+
+  public static ElementProperties.Builder setCategory(ElementProperties propertiesOrNull, int category) {
+    return toBuilder(propertiesOrNull).category(category);
   }
 
   public static int categoryOrZero(ScriptElement element) {
