@@ -408,6 +408,7 @@ public final class Inspector extends BaseObject {
     return this;
   }
 
+  @Deprecated
   public Inspector elements(ScriptElementList scriptElementList) {
     return elements(scriptElementList.elements());
   }

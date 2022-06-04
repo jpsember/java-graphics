@@ -648,6 +648,20 @@ public final class ImgUtil {
   // ------------------------------------------------------------------
 
   /**
+   * Construct a BufferedImage.TYPE_INT_BGR frmo an array of bytes
+   * 
+   */
+
+  public static BufferedImage bytesToBGRImage(byte[] bgrIn, IPoint size) {
+    if (bgrIn.length != size.product() * 3)
+      badArg("wrong length for pixel bytes:", bgrIn.length, "for image of size:", size);
+    BufferedImage result = ImgUtil.build(size, BufferedImage.TYPE_3BYTE_BGR);
+    byte[] bgrOut = ImgUtil.bgrPixels(result);
+    System.arraycopy(bgrIn, 0, bgrOut, 0, bgrIn.length);
+    return result;
+  }
+
+  /**
    * Convert an image from an array of floats to a BufferedImage.TYPE_INT_RGB.
    * Assumes each float represents a color component (red, green, blue, or
    * grayscale) from 0...1
@@ -748,6 +762,7 @@ public final class ImgUtil {
 
     return destination;
   }
+
   // ------------------------------------------------------------------
   // Conversion factors
   // ------------------------------------------------------------------
