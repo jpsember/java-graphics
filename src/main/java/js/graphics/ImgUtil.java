@@ -648,10 +648,8 @@ public final class ImgUtil {
   // ------------------------------------------------------------------
 
   /**
-   * Construct a BufferedImage.TYPE_INT_BGR frmo an array of bytes
-   * 
+   * Construct a BufferedImage.TYPE_INT_BGR from an array of bytes
    */
-
   public static BufferedImage bytesToBGRImage(byte[] bgrIn, IPoint size) {
     if (bgrIn.length != size.product() * 3)
       badArg("wrong length for pixel bytes:", bgrIn.length, "for image of size:", size);
