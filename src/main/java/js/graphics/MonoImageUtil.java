@@ -548,6 +548,13 @@ public final class MonoImageUtil {
     return construct(image.size(), outPix);
   }
 
+  public static MonoImage sharpen(MonoImage image) {
+    BufferedImage bi = to15BitBufferedImage(image);
+    bi = ImgEffects.sharpen(bi);
+    MonoImage mi = construct(bi);
+    return mi;
+  }
+
   /**
    * Add padding to an image (or return the original if no padding required)
    */
