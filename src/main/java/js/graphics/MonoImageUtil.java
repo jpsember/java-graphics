@@ -552,6 +552,15 @@ public final class MonoImageUtil {
     BufferedImage bi = to15BitBufferedImage(image);
     bi = ImgEffects.sharpen(bi);
     MonoImage mi = construct(bi);
+    // The sharpening has some overflow effects that I think is treating 'less than zero' pixels as white.
+    // If any pixels are negative, set them to zero.  Seems to work.
+    int i = INIT_INDEX;
+    short[] px = mi.pixels();
+    for (short p : px) {
+      i++;
+      if (p < 0)
+        px[i] = 0;
+    }
     return mi;
   }
 
