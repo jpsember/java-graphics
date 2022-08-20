@@ -35,6 +35,7 @@ import java.util.Random;
 import java.util.Set;
 import js.graphics.gen.Script;
 import js.graphics.gen.ScriptElementList;
+import js.graphics.gen.ScriptMetadata;
 import js.base.BaseObject;
 import js.data.AbstractData;
 import js.file.Files;
@@ -229,6 +230,7 @@ public final class Inspector extends BaseObject {
       mImageSize = null;
       mNormalize = false;
       mSharpen = false;
+      mUserMap = null;
     }
     return this;
   }
@@ -408,6 +410,16 @@ public final class Inspector extends BaseObject {
     return this;
   }
 
+  /**
+   * Specify a user_map to include in script's metadata field (the other fields in the metadata aren't used at present)
+   */
+  public Inspector userMap(JSMap userMap) {
+    if (used()) {
+      mUserMap = userMap;
+    }
+    return this;
+  }
+
   @Deprecated
   public Inspector elements(ScriptElementList scriptElementList) {
     return elements(scriptElementList.elements());
@@ -513,6 +525,8 @@ public final class Inspector extends BaseObject {
   private Script script() {
     Script.Builder script = Script.newBuilder();
     script.items(mElements);
+    if (mUserMap != null)
+      script.metadata(ScriptMetadata.newBuilder().userMap(mUserMap));
     return script.build();
   }
 
@@ -582,6 +596,7 @@ public final class Inspector extends BaseObject {
   private BufferedImage mBufferedImage;
   private JSObject mJsonObject;
   private MonoImage mMonoImage;
+  private JSMap mUserMap;
   private Set<String> mPrefixSet = hashSet();
   private Map<Integer, Sample> mSamples = hashMap();
   private Sample mActiveSample;

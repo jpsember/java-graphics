@@ -7,4 +7,8 @@ fields {
   // Transformation applied to source image/script to produce current image/script
   //
   ?Matrix source_transform;
+
+  // Optional user-defined json map
+  //
+  ?JSMap user_map;
 }
