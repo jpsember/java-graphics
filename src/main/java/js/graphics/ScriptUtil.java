@@ -58,7 +58,17 @@ public final class ScriptUtil {
   /**
    * Get annotation directory for a project directory
    */
+  @Deprecated
   public static File scriptDirForProject(File projectDirectory) {
+    return scriptDirForProject(projectDirectory, true);
+  }
+
+  /**
+   * Get annotation directory for a project directory
+   */
+  public static File scriptDirForProject(File projectDirectory, boolean projectIncludesImages) {
+    if (!projectIncludesImages)
+      return projectDirectory;
     return new File(projectDirectory, SCRIPTS_SUBDIRECTORY);
   }
 
@@ -190,23 +200,29 @@ public final class ScriptUtil {
   private static String[] sFileExtImages = { ImgUtil.EXT_JPEG, "jpeg", ImgUtil.EXT_PNG, ImgUtil.EXT_RAX };
   private static String[] sFileExtAnnotation = { Files.EXT_JSON };
 
+  @Deprecated
   public static List<ScriptFileEntry> buildScriptList(File projectDirectory) {
+    return buildScriptList(projectDirectory, true);
+  }
+
+  public static List<ScriptFileEntry> buildScriptList(File projectDirectory, boolean includesImages) {
 
     Map<String, ScriptFileEntry> fileRootSet = hashMap();
-
-    for (File imageFile : FileUtils.listFiles(projectDirectory, sFileExtImages, false)) {
-      String key = Files.basename(imageFile);
-      File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
-      ScriptFileEntry entry = ScriptFileEntry.newBuilder() //
-          .imageName(imageFile.getName()) //
-          .scriptName(scriptFile.getName()) //
-          .build();
-      ScriptFileEntry dup = fileRootSet.put(key, entry);
-      if (dup != null)
-        throw badState("Multiple images with name:", key);
+    if (includesImages) {
+      for (File imageFile : FileUtils.listFiles(projectDirectory, sFileExtImages, false)) {
+        String key = Files.basename(imageFile);
+        File scriptFile = ScriptUtil.scriptPathForImage(imageFile);
+        ScriptFileEntry entry = ScriptFileEntry.newBuilder() //
+            .imageName(imageFile.getName()) //
+            .scriptName(scriptFile.getName()) //
+            .build();
+        ScriptFileEntry dup = fileRootSet.put(key, entry);
+        if (dup != null)
+          throw badState("Multiple images with name:", key);
+      }
     }
+    File scriptsDir = ScriptUtil.scriptDirForProject(projectDirectory, includesImages);
 
-    File scriptsDir = ScriptUtil.scriptDirForProject(projectDirectory);
     if (scriptsDir.exists()) {
       for (File scriptFile : FileUtils.listFiles(scriptsDir, sFileExtAnnotation, false)) {
         String key = Files.basename(scriptFile);
@@ -234,6 +250,7 @@ public final class ScriptUtil {
     Files.S.writeIfChanged(path, json.toString());
   }
 
+  @Deprecated // Suspect this is not needed
   public static void createNoImagesRequiredProject(File directory) {
     createProject(directory, map().put("require_images", false));
   }
