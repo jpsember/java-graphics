@@ -58,7 +58,6 @@ public final class ScriptUtil {
   /**
    * Get annotation directory for a project directory
    */
-  @Deprecated
   public static File scriptDirForProject(File projectDirectory) {
     return scriptDirForProject(projectDirectory, true);
   }
@@ -72,27 +71,29 @@ public final class ScriptUtil {
     return new File(projectDirectory, SCRIPTS_SUBDIRECTORY);
   }
 
-  /**
-   * Get project file
-   */
-  public static File projectFileForProject(File projectDirectory) {
-    File absProjDir = projectDirectory.getAbsoluteFile();
-    File relativeToHome = Files.fileRelativeToDirectory(absProjDir, Files.homeDirectory());
-    String relDir = relativeToHome.toString();
-    File dir = new File(scriptProjectsDirectory(), relDir);
-    Files.S.mkdirs(dir);
-    return new File(dir, SCRIPT_PROJECT_FILENAME);
-  }
+//  /**
+//   * Get project file
+//   */
+//  @Deprecated // pass in a name for the directory containing this (e.g. ".scredit")
+//  public static File projectFileForProject(File projectDirectory) {
+//    File absProjDir = projectDirectory.getAbsoluteFile();
+//    File relativeToHome = Files.fileRelativeToDirectory(absProjDir, Files.homeDirectory());
+//    String relDir = relativeToHome.toString();
+//    File dir = new File(scriptProjectsDirectory(), relDir);
+//    Files.S.mkdirs(dir);
+//    return new File(dir, SCRIPT_PROJECT_FILENAME);
+//  }
 
-  public static File scriptProjectsDirectory() {
-    if (sScriptProjectsDir == null) {
-      sScriptProjectsDir = new File(Files.homeDirectory(), ".scredit");
-      Files.S.mkdirs(sScriptProjectsDir);
-    }
-    return sScriptProjectsDir;
-  }
-
-  private static File sScriptProjectsDir;
+//  @Deprecated // pass in a name for the directory containing this (e.g. ".scredit")
+//  public static File scriptProjectsDirectory() {
+//    if (sScriptProjectsDir == null) {
+//      sScriptProjectsDir = new File(Files.homeDirectory(), ".scredit");
+//      Files.S.mkdirs(sScriptProjectsDir);
+//    }
+//    return sScriptProjectsDir;
+//  }
+//
+//  private static File sScriptProjectsDir;
 
   /**
    * Get the script file corresponding to an image
@@ -241,19 +242,19 @@ public final class ScriptUtil {
     return entries;
   }
 
-  public static void createProject(File directory, JSMap optMap) {
-    File path = projectFileForProject(directory);
-    JSMap json = JSMap.fromFileIfExists(path);
-    json.createMapIfMissing("state");
-    if (optMap != null)
-      json.putAll(optMap);
-    Files.S.writeIfChanged(path, json.toString());
-  }
+//  public static void createProject(File directory, JSMap optMap) {
+//    File path = projectFileForProject(directory);
+//    JSMap json = JSMap.fromFileIfExists(path);
+//    json.createMapIfMissing("state");
+//    if (optMap != null)
+//      json.putAll(optMap);
+//    Files.S.writeIfChanged(path, json.toString());
+//  }
 
-  @Deprecated // Suspect this is not needed
-  public static void createNoImagesRequiredProject(File directory) {
-    createProject(directory, map().put("require_images", false));
-  }
+//  @Deprecated // Suspect this is not needed
+//  public static void createNoImagesRequiredProject(File directory) {
+//    createProject(directory, map().put("require_images", false));
+//  }
 
   public static List<ScriptElement> transform(List<ScriptElement> elements, Matrix transform) {
     List<ScriptElement> result = arrayList();
