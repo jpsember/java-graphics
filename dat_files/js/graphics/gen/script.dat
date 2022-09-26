@@ -10,4 +10,8 @@ fields {
   ?ScriptMetadata metadata;
   ?bool omit;
   ?bool retain;
+
+  // Values for any script-specific widgets used by editors
+  //
+  ?JSMap widgets;
 }
