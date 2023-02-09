@@ -109,6 +109,9 @@ public final class MonoImageUtil {
 
   private static void auxGenerateStats(MonoImage img, ImageStats.Builder b) {
     verifyNonEmpty(img);
+    
+    // Get a copy of the array with all zero pixels removed (so they don't affect the stats)
+    //
     short[] pixels = filterOmittedPixels(img);
     b.count(pixels.length);
     if (b.count() == 0) {
