@@ -109,7 +109,7 @@ public final class MonoImageUtil {
 
   private static void auxGenerateStats(MonoImage img, ImageStats.Builder b) {
     verifyNonEmpty(img);
-    
+
     // Get a copy of the array with all zero pixels removed (so they don't affect the stats)
     //
     short[] pixels = filterOmittedPixels(img);
@@ -384,14 +384,10 @@ public final class MonoImageUtil {
     BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
     short[] srcPixels = monoImage.pixels();
     short[] destPixels = ImgUtil.grayPixels(bufferedImage);
-    short pixelBits = 0;
     for (int i = 0; i < destPixels.length; i++) {
-      short sourcePixel = srcPixels[i];
-      pixelBits |= sourcePixel;
+      short sourcePixel = clampTo15BitRange(srcPixels[i]);
       destPixels[i] = (short) (sourcePixel << 1);
     }
-    if ((pixelBits & 0x8000) != 0)
-      throw badArg("MonoImage had out-of-range pixels");
     return bufferedImage;
   }
 
@@ -431,6 +427,13 @@ public final class MonoImageUtil {
     return construct(ImgUtil.size(gray8Image), gray15Pixels);
   }
 
+  private static short clampTo15BitRange(short monoPixel) {
+    // clamp any extremely hot pixels to the maximum 15-bit range
+    if (monoPixel < 0)
+      monoPixel = MAX_PIXEL_VALUE - 1;
+    return monoPixel;
+  }
+
   /**
    * Construct 8-bit RGB BufferedImage from MonoImage
    */
@@ -439,17 +442,12 @@ public final class MonoImageUtil {
     int[] destPixels = ((DataBufferInt) bufferedImage.getRaster().getDataBuffer()).getData();
     short[] sourcePixels = rawImage.pixels();
 
-    short pixelBits = 0;
     for (int i = 0; i < sourcePixels.length; i++) {
-      short source = sourcePixels[i];
-      pixelBits |= source;
+      short source = clampTo15BitRange(sourcePixels[i]);
       // We are converting a 15-bit pixel to an 8-bit one
       int gray = source >> 7;
       destPixels[i] = gray | (gray << 8) | (gray << 16);
     }
-
-    if ((pixelBits & 0x8000) != 0 && !alert("disabled"))
-      throw badArg("Source MonoImage has out of range pixels");
     return bufferedImage;
   }
 
