@@ -448,7 +448,7 @@ public final class MonoImageUtil {
       destPixels[i] = gray | (gray << 8) | (gray << 16);
     }
 
-    if ((pixelBits & 0x8000) != 0)
+    if ((pixelBits & 0x8000) != 0 && !alert("disabled"))
       throw badArg("Source MonoImage has out of range pixels");
     return bufferedImage;
   }

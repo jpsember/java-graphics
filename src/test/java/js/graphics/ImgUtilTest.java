@@ -24,10 +24,16 @@
  **/
 package js.graphics;
 
+import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 import js.base.BasePrinter;
+import js.data.DataUtil;
+import js.file.Files;
+import js.geometry.IPoint;
+import js.graphics.gen.MonoImage;
 import js.json.JSMap;
 import js.testutil.MyTestCase;
 
@@ -66,11 +72,47 @@ public class ImgUtilTest extends MyTestCase {
     JSMap m = ImgUtil.toJson(ImgUtil.FONT_DEFAULT);
     Font f = ImgUtil.parseFont(m);
     JSMap m2 = map();
-    m2.put("orig",m);
-    m2.put("parsed",ImgUtil.toJson(f));
+    m2.put("orig", m);
+    m2.put("parsed", ImgUtil.toJson(f));
     assertMessage(m2);
   }
-  
+
+  @Test
+  public void problematicMonoImage() {
+    MonoImage img = ImgUtil.decompressRAX(Files.toByteArray(testFile("problem.rax"), "problem.rax"), null);
+    int problemCount = 0;
+    IPoint sz = img.size();
+    int i = 0;
+
+    for (int y = 0; y < sz.y; y++) {
+      boolean prevBad = false;
+      int prevPixValue = -1;
+      for (int x = 0; x < sz.x; x++) {
+        short pix = img.pixels()[i];
+        boolean newBad = (pix < 0 || pix > 32700);
+        if (newBad) {
+          pr("problem pixel:", Integer.toHexString(((int) pix) & 0xffff), "at:", x, y);
+          problemCount++;
+          if (!prevBad)
+            pr("prev good pixel:", Integer.toHexString(prevPixValue));
+        }
+        prevPixValue = pix;
+        prevBad = newBad;
+        i++;
+      }
+    }
+    checkState(problemCount > 0);
+
+    int cx = 310;
+    int cy = 52;
+    BufferedImage bi = MonoImageUtil.to8BitRGBBufferedImage(img);
+    Graphics2D g = bi.createGraphics();
+    g.setColor(Color.GREEN);
+    int r = 10;
+    g.drawOval(cx - r, cy - r, r, r);
+    ImgUtil.writeImage(files(), bi, Files.getDesktopFile("problem_result.png"));
+  }
+
   private BufferedImage readImage(String name) {
     return ImgUtil.read(testFile(name));
   }
