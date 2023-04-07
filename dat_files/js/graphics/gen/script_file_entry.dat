@@ -1,4 +1,4 @@
-fields {
+class {
 
   // Name of image, or empty string if there isn't one
   string image_name;

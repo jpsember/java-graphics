@@ -1,4 +1,4 @@
-fields {
+class {
   int golomb = 180;
   float padding  = 0.25;
 

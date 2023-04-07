@@ -1,4 +1,4 @@
-fields {
+class {
   // Nonempty if stats generation is incomplete
   string problem;
 

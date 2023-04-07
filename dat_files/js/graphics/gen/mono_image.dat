@@ -1,4 +1,4 @@
-fields {
+class {
 
   // Offset within original image of first pixel
   IPoint offset;

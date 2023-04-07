@@ -1,5 +1,5 @@
 extern js.graphics.ScriptElement;
 
-fields {
+class {
   * ScriptElement elements;
 }

@@ -1,5 +1,4 @@
-
-fields {
+class {
   IPoint size;  // dimensions
   int depth;    // number of components per pixel
   ?*byte b_pixels;  // pixel data, if 8-bit components
