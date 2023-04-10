@@ -364,7 +364,11 @@ public final class ScriptUtil {
 
   public static ScriptElementList extractScriptElementList(Script script) {
     ScriptElementList.Builder b = ScriptElementList.newBuilder();
-    b.elements(script.items());
+    todo("revert to old code to see if still a problem");
+    // The new datagen classes fail here; I am not constructing a copy of this array!
+    List<ScriptElement> arr = arrayList();
+    arr.addAll(script.items());
+    b.elements(arr);
     return b.build();
   }
 
