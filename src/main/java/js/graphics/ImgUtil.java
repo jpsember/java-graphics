@@ -86,7 +86,7 @@ public final class ImgUtil {
     String ext = Files.getExtension(src);
     if (ext.equals(EXT_RAX)) {
       MonoImage monoImage = readRax(src);
-      return MonoImageUtil.to15BitBufferedImage(monoImage);
+      return MonoImageUtil.toBufferedImage(monoImage);
     }
     return read(Files.openInputStream(src));
   }

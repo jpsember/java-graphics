@@ -28,10 +28,13 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 import js.base.BasePrinter;
+import js.data.ShortArray;
 import js.file.Files;
 import js.geometry.IPoint;
+import js.graphics.gen.ImageStats;
 import js.graphics.gen.MonoImage;
 import js.json.JSMap;
 import js.testutil.MyTestCase;
@@ -39,6 +42,7 @@ import js.testutil.MyTestCase;
 import org.junit.Test;
 
 import static js.base.Tools.*;
+import static org.junit.Assert.*;
 
 public class ImgUtilTest extends MyTestCase {
 
@@ -115,6 +119,38 @@ public class ImgUtilTest extends MyTestCase {
     int r = 10;
     g.drawOval(cx - r, cy - r, r, r);
     ImgUtil.writeImage(files(), bi, Files.getDesktopFile("problem_result.png"));
+  }
+
+  @Test
+  public void monoImageToPNGAndBack() {
+    final boolean db = false;
+    MonoImage mono = randomImage(new IPoint(8, 8), 0x010, 0xfc00);
+    BufferedImage bImg = MonoImageUtil.toBufferedImage(mono);
+    if (db) {
+      ImageStats stats = MonoImageUtil.constructSmallStats(bImg);
+      pr(stats);
+    }
+    byte[] png = ImgUtil.toPNG(bImg);
+    BufferedImage bImg2 = ImgUtil.read(png);
+    MonoImage mono2 = MonoImageUtil.construct(bImg2);
+    if (db) {
+      JSMap m = map().put("pix1:", ShortArray.with(mono.pixels()));
+      m.put("pix2:", ShortArray.with(mono2.pixels()));
+      pr(m);
+    }
+    boolean equal = Arrays.equals(mono.pixels(), mono2.pixels());
+    assertTrue(equal);
+  }
+
+  private MonoImage randomImage(IPoint size, int minPixelValue, int maxPixelValue) {
+    if (size == null)
+      size = new IPoint(160, 128);
+    short[] pixels = new short[size.product()];
+    for (int i = 0; i < pixels.length; i++) {
+      pixels[i] = (short) (((int) (random().nextGaussian() * (maxPixelValue - minPixelValue)
+          + minPixelValue)));
+    }
+    return MonoImage.newBuilder().size(size).pixels(pixels).build();
   }
 
   private BufferedImage readImage(String name) {

@@ -377,8 +377,8 @@ public final class MonoImageUtil {
   }
 
   /**
-   * Construct grayscale BufferedImage from MonoImage, scaling the 15-bit pixels
-   * to 16 bits
+   * Construct grayscale BufferedImage from MonoImage, clamping the MonoImage to
+   * 15 bits, and scaling the result to 16 bits
    */
   public static BufferedImage to16BitBufferedImage(MonoImage monoImage) {
     BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
@@ -392,10 +392,19 @@ public final class MonoImageUtil {
   }
 
   /**
-   * Construct grayscale BufferedImage from MonoImage, copying the 15-bit pixels
-   * without change
+   * Construct grayscale BufferedImage from MonoImage, copying the MonoImage
+   * pixels unchanged
    */
+  @Deprecated // The name is misleading; prefer renaming to to16Bit...WithoutClamping
   public static BufferedImage to15BitBufferedImage(MonoImage monoImage) {
+   return toBufferedImage(monoImage);
+  }
+
+  /**
+   * Construct grayscale BufferedImage from MonoImage, copying the MonoImage
+   * pixels unchanged
+   */
+  public static BufferedImage toBufferedImage(MonoImage monoImage) {
     BufferedImage bufferedImage = ImgUtil.build16BitGrayscaleImage(monoImage.size());
     short[] destPixels = ImgUtil.grayPixels(bufferedImage);
     System.arraycopy(monoImage.pixels(), 0, destPixels, 0, monoImage.pixels().length);
