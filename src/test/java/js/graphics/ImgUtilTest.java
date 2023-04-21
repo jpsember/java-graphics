@@ -28,9 +28,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.Arrays;
+import java.util.Iterator;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.metadata.IIOMetadata;
 
 import js.base.BasePrinter;
+import js.data.DataUtil;
 import js.data.ShortArray;
 import js.file.Files;
 import js.geometry.IPoint;
@@ -119,6 +128,49 @@ public class ImgUtilTest extends MyTestCase {
     int r = 10;
     g.drawOval(cx - r, cy - r, r, r);
     ImgUtil.writeImage(files(), bi, Files.getDesktopFile("problem_result.png"));
+  }
+
+  @Test
+  public void pngCompressionLength() {
+
+    JSMap m = map();
+
+    File raxFile = testFile("problem.rax");
+    byte[] rax = Files.toByteArray(raxFile, "rax file");
+    m.put("length, rax", rax.length);
+    byte[] raxZipped = DataUtil.compress(rax);
+    m.put("length, rax+zip", raxZipped.length);
+
+    MonoImage mono = ImgUtil.readRax(raxFile);
+    BufferedImage bImg = MonoImageUtil.toBufferedImage(mono);
+
+    byte[] png1 = ImgUtil.toPNG(bImg);
+    m.put("length, png", png1.length);
+
+    byte[] zipped = DataUtil.compress(png1);
+    m.put("length, png+zip", zipped.length);
+
+    pr(m);
+    if (false) { // Can't seem to find an import for PNGMetadata
+
+      final String formatName = "png";
+
+      for (Iterator<ImageWriter> iw = ImageIO.getImageWritersByFormatName(formatName); iw.hasNext();) {
+        ImageWriter writer = iw.next();
+        ImageWriteParam writeParam = writer.getDefaultWriteParam();
+        ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier
+            .createFromBufferedImageType(BufferedImage.TYPE_INT_RGB);
+        IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, writeParam);
+
+        pr("metadata:", metadata);
+        // PNGMetadata png = (PNGMetadata) metadata;
+
+        // IIOMetadataNode stdComp = png.getStandardCompressionNode();
+        //        NamedNodeMap nnMap = stdComp.getFirstChild().getAttributes();
+        //        String nnValue = nnMap.item(0).getNodeValue();
+        //        System.out.println("Compression name "+nnValue);
+      }
+    }
   }
 
   @Test
