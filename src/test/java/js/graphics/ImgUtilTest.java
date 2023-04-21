@@ -31,8 +31,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Arrays;
 
-import com.pngencoder.PngEncoder;
-
 import js.base.BasePrinter;
 import js.data.DataUtil;
 import js.file.Files;
@@ -139,7 +137,7 @@ public class ImgUtilTest extends MyTestCase {
   @Test
   public void pngCompressionLength() {
 
-    if (false) {
+    if (true) {
       // Issue #8; didn't figure out how to improve png compression
       return;
     }
@@ -187,56 +185,6 @@ public class ImgUtilTest extends MyTestCase {
       validatePNG(png, mono);
     }
 
-    long lengthPngAlt1 = 0;
-    float timePngAlt1 = 0;
-    checkpoint();
-    {
-      byte[] png2 = null;
-      for (int i = 0; i < reps; i++) {
-        png2 = new PngEncoder().withBufferedImage(bImg)//
-            .withCompressionLevel(9) //
-            .withTryIndexedEncoding(true) //
-            .withPredictorEncoding(true) //
-            .toBytes();
-      }
-      lengthPngAlt1 = png2.length;
-      timePngAlt1 = checkpoint();
-      validatePNG(png2, mono);
-    }
-
-    //    if (false) { // This has no effect on compression size and is slightly slower
-    //      {
-    //        byte[] png2 = null;
-    //        for (int i = 0; i < reps; i++) {
-    //          png2 = new PngEncoder().withBufferedImage(bImg)//
-    //              .withCompressionLevel(9) //
-    //              //.withTryIndexedEncoding(true) //
-    //              .withPredictorEncoding(true) //
-    //              .toBytes();
-    //        }
-    //        checkpoint("parms2");
-    //        m.put("length, png alt 2", png2.length);
-    //        validatePNG(png2, mono);
-    //      }
-    //    }
-
-    long lengthPngAlt3 = 0;
-    float timePngAlt3 = 0;
-    checkpoint();
-    {
-      byte[] png2 = null;
-      for (int i = 0; i < reps; i++) {
-        png2 = new PngEncoder().withBufferedImage(bImg)//
-            .withCompressionLevel(9) //
-            .withTryIndexedEncoding(true) //
-            //.withPredictorEncoding(true) //
-            .toBytes();
-      }
-      lengthPngAlt3 = png2.length;
-      timePngAlt3 = checkpoint();
-      validatePNG(png2, mono);
-    }
-
     long lengthJimg = 0;
     float timeJimg = 0;
     {
@@ -252,7 +200,7 @@ public class ImgUtilTest extends MyTestCase {
     }
 
     JSMap m = map();
-    
+
     m.putNumbered("rax length", lengthRax);
     m.putNumbered("rax time", ratio(timeRax, timeRax));
 
@@ -261,12 +209,6 @@ public class ImgUtilTest extends MyTestCase {
     m.putNumbered("png length", ratio(lengthPng, lengthRax));
     m.putNumbered("png time", ratio(timePng, timeRax));
     m.putNumbered("pngz length", ratio(lengthPngZip, lengthRax));
-
-    m.putNumbered("png1 length", ratio(lengthPngAlt1, lengthRax));
-    m.putNumbered("png1 time", ratio(timePngAlt1, timeRax));
-
-    m.putNumbered("png3 length", ratio(lengthPngAlt3, lengthRax));
-    m.putNumbered("png3 time", ratio(timePngAlt3, timeRax));
 
     m.putNumbered("jimg length", ratio(lengthJimg, lengthRax));
     m.putNumbered("jimg time", ratio(timeJimg, timeRax));
