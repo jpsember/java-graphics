@@ -357,7 +357,7 @@ public final class JImageUtil {
   /**
    * Convert an array of integer pixels to bytes, and check for overflow
    */
-  private static byte[] reducePixelToByte(int[] pixels) {
+  public static byte[] reducePixelToByte(int[] pixels) {
     int size = pixels.length;
     byte[] r = new byte[size];
     for (int i = 0; i < size; i++) {

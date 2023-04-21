@@ -30,20 +30,15 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Arrays;
-import java.util.Iterator;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.metadata.IIOMetadata;
+import com.pngencoder.PngEncoder;
 
 import js.base.BasePrinter;
 import js.data.DataUtil;
-import js.data.ShortArray;
 import js.file.Files;
 import js.geometry.IPoint;
 import js.graphics.gen.ImageStats;
+import js.graphics.gen.JImage;
 import js.graphics.gen.MonoImage;
 import js.json.JSMap;
 import js.testutil.MyTestCase;
@@ -51,7 +46,6 @@ import js.testutil.MyTestCase;
 import org.junit.Test;
 
 import static js.base.Tools.*;
-import static org.junit.Assert.*;
 
 public class ImgUtilTest extends MyTestCase {
 
@@ -130,47 +124,168 @@ public class ImgUtilTest extends MyTestCase {
     ImgUtil.writeImage(files(), bi, Files.getDesktopFile("problem_result.png"));
   }
 
+  private float checkpoint() {
+    long currentCheckpoint = System.currentTimeMillis();
+    long last = mPreviousCheckpoint;
+    if (last == 0)
+      last = currentCheckpoint;
+    long elapsed = currentCheckpoint - last;
+    mPreviousCheckpoint = currentCheckpoint;
+    return elapsed / 1000f;
+  }
+
+  private long mPreviousCheckpoint;
+
   @Test
   public void pngCompressionLength() {
 
-    JSMap m = map();
+    if (false) {
+      // Issue #8; didn't figure out how to improve png compression
+      return;
+    }
 
     File raxFile = testFile("problem.rax");
     byte[] rax = Files.toByteArray(raxFile, "rax file");
-    m.put("length, rax", rax.length);
     byte[] raxZipped = DataUtil.compress(rax);
-    m.put("length, rax+zip", raxZipped.length);
 
     MonoImage mono = ImgUtil.readRax(raxFile);
     BufferedImage bImg = MonoImageUtil.toBufferedImage(mono);
 
-    byte[] png1 = ImgUtil.toPNG(bImg);
-    m.put("length, png", png1.length);
+    long lengthPngZip;
 
-    byte[] zipped = DataUtil.compress(png1);
-    m.put("length, png+zip", zipped.length);
+    {
+      byte[] png1 = ImgUtil.toPNG(bImg);
+      byte[] zipped = DataUtil.compress(png1);
+      lengthPngZip = zipped.length;
+    }
+
+    int reps = 500;
+
+    long lengthRax = 0;
+    float timeRax = 0;
+    checkpoint();
+    {
+      byte[] rax2 = null;
+      for (int i = 0; i < reps; i++) {
+        MonoImage mi = MonoImageUtil.construct(bImg);
+        rax2 = ImgUtil.compressRAX(mi);
+      }
+      timeRax = checkpoint();
+      lengthRax = rax2.length;
+    }
+
+    float timePng = 0;
+    long lengthPng = 0;
+    checkpoint();
+    {
+      byte[] png = null;
+      for (int i = 0; i < reps; i++) {
+        png = ImgUtil.toPNG(bImg);
+      }
+      timePng = checkpoint();
+      lengthPng = png.length;
+      validatePNG(png, mono);
+    }
+
+    long lengthPngAlt1 = 0;
+    float timePngAlt1 = 0;
+    checkpoint();
+    {
+      byte[] png2 = null;
+      for (int i = 0; i < reps; i++) {
+        png2 = new PngEncoder().withBufferedImage(bImg)//
+            .withCompressionLevel(9) //
+            .withTryIndexedEncoding(true) //
+            .withPredictorEncoding(true) //
+            .toBytes();
+      }
+      lengthPngAlt1 = png2.length;
+      timePngAlt1 = checkpoint();
+      validatePNG(png2, mono);
+    }
+
+    //    if (false) { // This has no effect on compression size and is slightly slower
+    //      {
+    //        byte[] png2 = null;
+    //        for (int i = 0; i < reps; i++) {
+    //          png2 = new PngEncoder().withBufferedImage(bImg)//
+    //              .withCompressionLevel(9) //
+    //              //.withTryIndexedEncoding(true) //
+    //              .withPredictorEncoding(true) //
+    //              .toBytes();
+    //        }
+    //        checkpoint("parms2");
+    //        m.put("length, png alt 2", png2.length);
+    //        validatePNG(png2, mono);
+    //      }
+    //    }
+
+    long lengthPngAlt3 = 0;
+    float timePngAlt3 = 0;
+    checkpoint();
+    {
+      byte[] png2 = null;
+      for (int i = 0; i < reps; i++) {
+        png2 = new PngEncoder().withBufferedImage(bImg)//
+            .withCompressionLevel(9) //
+            .withTryIndexedEncoding(true) //
+            //.withPredictorEncoding(true) //
+            .toBytes();
+      }
+      lengthPngAlt3 = png2.length;
+      timePngAlt3 = checkpoint();
+      validatePNG(png2, mono);
+    }
+
+    long lengthJimg = 0;
+    float timeJimg = 0;
+    {
+      int[] jmg = null;
+      for (int i = 0; i < reps; i++) {
+        JImage jm = JImageUtil.from(bImg);
+        jmg = JImageUtil.encode(jm, null);
+      }
+      lengthJimg = jmg.length * 4; // 4 bytes per int
+      JImage jm2 = JImageUtil.decode(jmg);
+      validateMonoImage(mono.pixels(), jm2.wPixels());
+      timeJimg = checkpoint();
+    }
+
+    JSMap m = map();
+    
+    m.putNumbered("rax length", lengthRax);
+    m.putNumbered("rax time", ratio(timeRax, timeRax));
+
+    m.putNumbered("raxz length", ratio(raxZipped.length, lengthRax));
+
+    m.putNumbered("png length", ratio(lengthPng, lengthRax));
+    m.putNumbered("png time", ratio(timePng, timeRax));
+    m.putNumbered("pngz length", ratio(lengthPngZip, lengthRax));
+
+    m.putNumbered("png1 length", ratio(lengthPngAlt1, lengthRax));
+    m.putNumbered("png1 time", ratio(timePngAlt1, timeRax));
+
+    m.putNumbered("png3 length", ratio(lengthPngAlt3, lengthRax));
+    m.putNumbered("png3 time", ratio(timePngAlt3, timeRax));
+
+    m.putNumbered("jimg length", ratio(lengthJimg, lengthRax));
+    m.putNumbered("jimg time", ratio(timeJimg, timeRax));
 
     pr(m);
-    if (false) { // Can't seem to find an import for PNGMetadata
+  }
 
-      final String formatName = "png";
+  private static String ratio(double a, double b) {
+    return String.format("%6.3f", a / b);
+  }
 
-      for (Iterator<ImageWriter> iw = ImageIO.getImageWritersByFormatName(formatName); iw.hasNext();) {
-        ImageWriter writer = iw.next();
-        ImageWriteParam writeParam = writer.getDefaultWriteParam();
-        ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier
-            .createFromBufferedImageType(BufferedImage.TYPE_INT_RGB);
-        IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, writeParam);
+  private void validatePNG(byte[] png, MonoImage monoExpected) {
+    BufferedImage bImg2 = ImgUtil.read(png);
+    MonoImage mono2 = MonoImageUtil.construct(bImg2);
+    validateMonoImage(monoExpected.pixels(), mono2.pixels());
+  }
 
-        pr("metadata:", metadata);
-        // PNGMetadata png = (PNGMetadata) metadata;
-
-        // IIOMetadataNode stdComp = png.getStandardCompressionNode();
-        //        NamedNodeMap nnMap = stdComp.getFirstChild().getAttributes();
-        //        String nnValue = nnMap.item(0).getNodeValue();
-        //        System.out.println("Compression name "+nnValue);
-      }
-    }
+  private void validateMonoImage(short[] pixels, short[] expectedPixels) {
+    checkState(Arrays.equals(expectedPixels, pixels), "monochrome pixel arrays are different");
   }
 
   @Test
@@ -183,15 +298,7 @@ public class ImgUtilTest extends MyTestCase {
       pr(stats);
     }
     byte[] png = ImgUtil.toPNG(bImg);
-    BufferedImage bImg2 = ImgUtil.read(png);
-    MonoImage mono2 = MonoImageUtil.construct(bImg2);
-    if (db) {
-      JSMap m = map().put("pix1:", ShortArray.with(mono.pixels()));
-      m.put("pix2:", ShortArray.with(mono2.pixels()));
-      pr(m);
-    }
-    boolean equal = Arrays.equals(mono.pixels(), mono2.pixels());
-    assertTrue(equal);
+    validatePNG(png, mono);
   }
 
   private MonoImage randomImage(IPoint size, int minPixelValue, int maxPixelValue) {
