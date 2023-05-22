@@ -65,15 +65,6 @@ public final class ImgUtil {
   public static final String EXT_JMG = "jmg";
   public static final String EXT_RAX = "rax";
 
-  @Deprecated
-  public static final String JPEG_EXT = EXT_JPEG;
-  @Deprecated
-  public static final String PNG_EXT = EXT_PNG;
-  @Deprecated
-  public static final String JMG_EXT = EXT_JMG;
-  @Deprecated
-  public static final String RAX_EXT = EXT_RAX;
-
   public static final List<String> IMAGE_EXTENSIONS = arrayList(EXT_JPEG, EXT_PNG, "jpeg", EXT_RAX);
   public static final int PREFERRED_IMAGE_TYPE_COLOR = BufferedImage.TYPE_INT_RGB;
 
@@ -297,7 +288,7 @@ public final class ImgUtil {
    * Determine if an array of bytes looks like an image in rax format. If so,
    * return the dimensions of the image; else, null
    */
-  private static IPoint looksLikeCompressedRawImage(byte[] byteBuffer) {
+  public static IPoint looksLikeCompressedRawImage(byte[] byteBuffer) {
     IPoint result = null;
     do {
       if (byteBuffer.length < RAX_COMPRESS_HEADER_LENGTH)
