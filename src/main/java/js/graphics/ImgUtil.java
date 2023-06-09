@@ -30,6 +30,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.image.*;
 import java.io.*;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -304,6 +305,14 @@ public final class ImgUtil {
     return result;
   }
 
+  private static final byte[] PNG_HEADER = { (byte) 137, 80, 78, 71, 13, 10, 26, 10 };
+
+  public static boolean looksLikePngImage(byte[] byteBuffer) {
+  if (byteBuffer.length
+       < PNG_HEADER.length) return false;
+             return  Arrays.equals(byteBuffer, 0, PNG_HEADER.length, PNG_HEADER, 0, PNG_HEADER.length)) {
+  }
+  
   /**
    * Interpret a byte as an unsigned 8-bit int
    */
@@ -1049,7 +1058,6 @@ public final class ImgUtil {
   }
 
   private static BufferedImage register(BufferedImage image) {
-    mem().register(image);
     return image;
   }
 
