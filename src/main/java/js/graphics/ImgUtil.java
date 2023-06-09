@@ -308,11 +308,11 @@ public final class ImgUtil {
   private static final byte[] PNG_HEADER = { (byte) 137, 80, 78, 71, 13, 10, 26, 10 };
 
   public static boolean looksLikePngImage(byte[] byteBuffer) {
-  if (byteBuffer.length
-       < PNG_HEADER.length) return false;
-             return  Arrays.equals(byteBuffer, 0, PNG_HEADER.length, PNG_HEADER, 0, PNG_HEADER.length)) {
+    if (byteBuffer.length < PNG_HEADER.length)
+      return false;
+    return Arrays.equals(byteBuffer, 0, PNG_HEADER.length, PNG_HEADER, 0, PNG_HEADER.length);
   }
-  
+
   /**
    * Interpret a byte as an unsigned 8-bit int
    */
