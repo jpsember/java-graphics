@@ -26,11 +26,8 @@ package js.graphics;
 
 import org.junit.Test;
 
-import js.geometry.FRect;
 import js.geometry.IPoint;
 import js.geometry.IRect;
-import js.graphics.gen.ImageFitOptions;
-import js.graphics.gen.ImageFitType;
 import js.json.JSMap;
 import js.testutil.MyTestCase;
 import static js.base.Tools.*;
@@ -39,54 +36,51 @@ public class ImageFitTest extends MyTestCase {
 
   @Test
   public void crop() {
-    f.fitType(ImageFitType.CROP);
+    mPadVsCropBias = 1;
     perform();
   }
 
   @Test
   public void crop2() {
-    f.fitType(ImageFitType.CROP);
+    mPadVsCropBias = 1;
     switchAspect();
     perform();
   }
 
   @Test
   public void letterBox() {
-    f.fitType(ImageFitType.LETTERBOX);
+    mPadVsCropBias = 0;
     perform();
   }
 
   @Test
   public void letterBox2() {
-    f.fitType(ImageFitType.LETTERBOX);
+    mPadVsCropBias = 0;
     switchAspect();
     perform();
   }
 
   @Test
   public void hybrid() {
-    f.fitType(ImageFitType.HYBRID);
+    mPadVsCropBias = .5f;
     perform();
   }
 
   @Test
   public void hybrid2() {
-    f.fitType(ImageFitType.HYBRID);
+    mPadVsCropBias = .5f;
     switchAspect();
     perform();
   }
 
   private JSMap performAux() {
-    ImageFit imageFit = new ImageFit(f.build(), srcSize);
-    JSMap m = f.toJson();
-    m.put("source_size", srcSize);
-    IRect tr = imageFit.transformedSourceRect();
-    m.put("~target_rect", tr);
-    m.put("~crop_nec", imageFit.cropNecessary());
-    m.put("~matrix", imageFit.matrix());
-    FRect tf = imageFit.transformedSourceRectF();
-    float xErr = f.targetSize().x - tf.width;
-    float yErr = f.targetSize().y - tf.height;
+    IPoint targetSize = new IPoint(1024, 600);
+    JSMap m = map();
+    m.put("source_size", mSrcSize);
+    IRect tf = IRect.FitRectToRect(mSrcSize, targetSize, mPadVsCropBias, 0, 0);
+    m.put("~target_rect",tf);
+    int xErr = targetSize.x - tf.width;
+    int yErr = targetSize.y - tf.height;
     m.put("~~x err", xErr);
     m.put("~~y err", yErr);
     m.put("~~~ err", xErr * xErr + yErr * yErr);
@@ -94,14 +88,16 @@ public class ImageFitTest extends MyTestCase {
   }
 
   private void switchAspect() {
-    srcSize = srcSize.withY(140);
+    mSrcSize = mSrcSize.withY(140);
   }
 
   private void perform() {
     loadTools();
-    assertMessage(performAux());
+    JSMap m = performAux();
+    log(m);
+    assertMessage(m);
   }
 
-  private ImageFitOptions.Builder f = ImageFitOptions.newBuilder().targetSize(new IPoint(1024, 600));
-  private IPoint srcSize = new IPoint(320, 256);
+  private float mPadVsCropBias;
+  private IPoint mSrcSize = new IPoint(320, 256);
 }
