@@ -2,7 +2,7 @@
 //
 enum js.graphics.gen.ImageFitType;
 
-class {
+- class {
   IPoint target_size;
   bool scale_up = true;    // allow scaling up?
   bool scale_down = true;  // allow scaling down?

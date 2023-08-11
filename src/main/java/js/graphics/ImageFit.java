@@ -41,6 +41,7 @@ import js.graphics.gen.ImageFitOptions;
  * rectangle. Doesn't actually involve images or pixels, just mathematical
  * rectangles
  */
+@Deprecated
 public final class ImageFit extends BaseObject {
 
   public ImageFit(ImageFitOptions opt, IPoint sourceSize) {
