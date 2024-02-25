@@ -279,7 +279,7 @@ public final class MonoImageUtil {
       }
       int val = Math.round(vi + valuesPerRow * .5f);
       float avgFreq = freq / (float) valuesPerRow;
-      entries.add(new Pair<>(val, avgFreq));
+      entries.add(pair(val, avgFreq));
       if (maxVal < avgFreq)
         maxVal = avgFreq;
       vi += valuesPerRow;
@@ -397,7 +397,7 @@ public final class MonoImageUtil {
    */
   @Deprecated // The name is misleading; prefer renaming to to16Bit...WithoutClamping
   public static BufferedImage to15BitBufferedImage(MonoImage monoImage) {
-   return toBufferedImage(monoImage);
+    return toBufferedImage(monoImage);
   }
 
   /**
