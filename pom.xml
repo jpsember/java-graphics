@@ -34,13 +34,14 @@
     <dependency>
       <groupId>com.github.jpsember</groupId>
       <artifactId>java-core</artifactId>
-      <version>v1.01</version>
+      <version>1.0</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.jpsember</groupId>
       <artifactId>java-testutil</artifactId>
-      <version>v1.0</version>
+      <version>1.0</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
