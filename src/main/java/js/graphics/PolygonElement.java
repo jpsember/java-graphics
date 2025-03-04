@@ -73,8 +73,8 @@ public class PolygonElement extends AbstractScriptElement {
   @Override
   public PolygonElement parse(Object object) {
     JSMap m = (JSMap) object;
-
     Polygon poly = Polygon.DEFAULT_INSTANCE.parse(m);
+    
     ElementProperties properties = parsePropertiesFromElement(m);
     return new PolygonElement(properties, poly);
   }

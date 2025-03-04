@@ -48,6 +48,9 @@ import static js.base.Tools.*;
  */
 public final class ScriptUtil {
 
+  // This is a global variable for now... hacky, I know
+  public static boolean sAllowEmptyScripts;
+
   // ------------------------------------------------------------------
   // File utilities
   // ------------------------------------------------------------------
@@ -275,7 +278,7 @@ public final class ScriptUtil {
   }
 
   public static boolean isUseful(Script script) {
-    return !script.equals(Script.DEFAULT_INSTANCE);
+    return sAllowEmptyScripts || !script.equals(Script.DEFAULT_INSTANCE);
   }
 
   /**
