@@ -29,6 +29,10 @@ public class Script implements AbstractData {
     return mRetain;
   }
 
+  public JSMap widgets() {
+    return mWidgets;
+  }
+
   @Override
   public Builder toBuilder() {
     return new Builder(this);
@@ -39,6 +43,7 @@ public class Script implements AbstractData {
   protected static final String _2 = "metadata";
   protected static final String _3 = "omit";
   protected static final String _4 = "retain";
+  protected static final String _5 = "widgets";
 
   @Override
   public String toString() {
@@ -64,6 +69,7 @@ public class Script implements AbstractData {
     if (mRetain != null) {
       m.putUnsafe(_4, mRetain);
     }
+    m.putUnsafe(_5, mWidgets);
     return m;
   }
 
@@ -91,6 +97,13 @@ public class Script implements AbstractData {
     }
     mOmit = m.opt(_3, (Boolean) null);
     mRetain = m.opt(_4, (Boolean) null);
+    {
+      mWidgets = JSMap.DEFAULT_INSTANCE;
+      JSMap x = m.optJSMap(_5);
+      if (x != null) {
+        mWidgets = x.lock();
+      }
+    }
   }
 
   public static Builder newBuilder() {
@@ -128,6 +141,8 @@ public class Script implements AbstractData {
       if (!(mRetain.equals(other.mRetain)))
         return false;
     }
+    if (!(mWidgets.equals(other.mWidgets)))
+      return false;
     return true;
   }
 
@@ -149,6 +164,7 @@ public class Script implements AbstractData {
       if (mRetain != null) {
         r = r * 37 + (mRetain ? 1 : 0);
       }
+      r = r * 37 + mWidgets.hashCode();
       m__hashcode = r;
     }
     return r;
@@ -159,6 +175,7 @@ public class Script implements AbstractData {
   protected ScriptMetadata mMetadata;
   protected Boolean mOmit;
   protected Boolean mRetain;
+  protected JSMap mWidgets;
   protected int m__hashcode;
 
   public static final class Builder extends Script {
@@ -169,6 +186,7 @@ public class Script implements AbstractData {
       mMetadata = m.mMetadata;
       mOmit = m.mOmit;
       mRetain = m.mRetain;
+      mWidgets = m.mWidgets;
     }
 
     @Override
@@ -190,6 +208,7 @@ public class Script implements AbstractData {
       r.mMetadata = mMetadata;
       r.mOmit = mOmit;
       r.mRetain = mRetain;
+      r.mWidgets = mWidgets;
       return r;
     }
 
@@ -218,6 +237,11 @@ public class Script implements AbstractData {
       return this;
     }
 
+    public Builder widgets(JSMap x) {
+      mWidgets = (x == null) ? JSMap.DEFAULT_INSTANCE : x;
+      return this;
+    }
+
   }
 
   public static final Script DEFAULT_INSTANCE = new Script();
@@ -225,6 +249,7 @@ public class Script implements AbstractData {
   private Script() {
     mUsage = ScriptUsage.DEFAULT_INSTANCE;
     mItems = DataUtil.emptyList();
+    mWidgets = JSMap.DEFAULT_INSTANCE;
   }
 
 }

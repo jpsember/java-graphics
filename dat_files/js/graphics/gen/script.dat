@@ -6,4 +6,7 @@ class {
   ?ScriptMetadata metadata;
   ?bool omit;
   ?bool retain;
+
+  // For use by editors
+  JSMap widgets;
 }

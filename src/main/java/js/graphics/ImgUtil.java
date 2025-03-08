@@ -58,6 +58,17 @@ import js.json.JSObject;
 public final class ImgUtil {
 
   // ------------------------------------------------------------------
+  // A handy template for per-issue (temporary) logging
+  //
+  //  public static final boolean DEBUG_x = false && alert("!Debug issue #20 is true");
+  //
+  //  public static void Dx(Object... messages) {
+  //    if (DEBUG_x) {
+  //      pr(insertStringToFront(">>>ISSUE x:", messages));
+  //    }
+  //  }
+
+  // ------------------------------------------------------------------
   // Image file extensions
   // ------------------------------------------------------------------
 
