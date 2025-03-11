@@ -95,6 +95,7 @@ public class Paint implements AbstractData {
   }
 
   public final Paint apply(Graphics2D g) {
+    todo("!consolidate this with Render class");
     if (!isFill())
       g.setStroke(new BasicStroke(mStrokeWidth));
     g.setColor(mColor);
